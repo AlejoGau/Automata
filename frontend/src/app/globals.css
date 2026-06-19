@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #f5f5f5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   TEMAS POR USUARIO
+   Truco: Tailwind v4 expone su paleta como variables CSS y las
+   utilidades (bg-/text-/from-/border-) las consumen con var().
+   Redefiniendo --color-orange-* y --color-amber-* dentro de una
+   clase de tema, se re-skinea TODA la app sin tocar el JSX.
+   - orange = color primario de marca
+   - amber  = color secundario / acento
+   ───────────────────────────────────────────────────────────── */
+
+/* SAN LORENZO (Alejo / owner) → primario ROJO, secundario AZUL */
+.theme-sanlorenzo {
+  --color-orange-200: #fecaca;
+  --color-orange-300: #fca5a5;
+  --color-orange-400: #f05252;
+  --color-orange-500: #e02424;
+  --color-orange-600: #c81e1e;
+  --color-orange-700: #9b1c1c;
+  --color-orange-800: #771d1d;
+  --color-orange-900: #5c1616;
+  --color-orange-950: #3a0c0c;
+
+  --color-amber-200: #bfdbfe;
+  --color-amber-300: #93c5fd;
+  --color-amber-400: #60a5fa;
+  --color-amber-500: #2563eb;
+  --color-amber-600: #1d4ed8;
+  --color-amber-700: #1e40af;
+  --color-amber-800: #1e3a8a;
+  --color-amber-900: #172a6b;
+  --color-amber-950: #0f1d4d;
+}
+
+/* FERRO CARRIL OESTE (Nico / agent) → todo VERDE CLARITO */
+.theme-ferro {
+  --color-orange-200: #bbf7d0;
+  --color-orange-300: #86efac;
+  --color-orange-400: #4ade80;
+  --color-orange-500: #22c55e;
+  --color-orange-600: #16a34a;
+  --color-orange-700: #15803d;
+  --color-orange-800: #166534;
+  --color-orange-900: #14532d;
+  --color-orange-950: #052e16;
+
+  --color-amber-200: #d9f99d;
+  --color-amber-300: #bef264;
+  --color-amber-400: #a3e635;
+  --color-amber-500: #84cc16;
+  --color-amber-600: #65a30d;
+  --color-amber-700: #4d7c0f;
+  --color-amber-800: #3f6212;
+  --color-amber-900: #365314;
+  --color-amber-950: #1a2e05;
+}
+
+/* Selección de texto en el color de marca activo */
+::selection {
+  background: color-mix(in oklab, var(--color-orange-500) 35%, transparent);
+  color: #fff;
+}
+
+/* Scrollbar personalizado, sigue el color del tema */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-orange-500) 35%, transparent) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-orange-500) 45%, transparent);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-orange-500) 70%, transparent);
+}
+
+/* Patrón sutil de puntos para el fondo del chat, sigue el color del tema */
+.chat-grid-bg {
+  background-color: #0a0a0a;
+  background-image: radial-gradient(
+    color-mix(in oklab, var(--color-orange-500) 7%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
