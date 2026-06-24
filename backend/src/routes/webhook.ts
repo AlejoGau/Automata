@@ -36,17 +36,25 @@ function mapStatus(statusNumber: number): 'sent' | 'delivered' | 'read' {
 }
 
 export function setupWebhookRouter(io: SocketServer) {
-  router.post('/whatsapp', async (req: Request, res: Response) => {
+  // Soporta los dos modos de Evolution:
+  //  - webhookByEvents=false → POST a /whatsapp  (el evento viene en el body)
+  //  - webhookByEvents=true  → POST a /whatsapp/messages-upsert (evento en la ruta)
+  router.post(['/whatsapp', '/whatsapp/:eventPath'], async (req: Request, res: Response) => {
     // Validar token/firma si está configurado en producción (opcional)
     const secret = req.headers['webhook-signature'] || req.headers['x-evolution-token'];
     const expectedSecret = process.env.EVOLUTION_WEBHOOK_SECRET;
-    
+
     if (expectedSecret && secret !== expectedSecret) {
       res.status(401).json({ error: 'No autorizado' });
       return;
     }
 
-    const { event, data } = req.body;
+    const { data } = req.body;
+    // El evento puede venir en el body o en la ruta (ej: "messages-upsert" → "messages.upsert")
+    let event = req.body.event;
+    if (!event && req.params.eventPath) {
+      event = req.params.eventPath.replace(/-/g, '.');
+    }
 
     if (!event || !data) {
       res.status(400).json({ error: 'Payload inválido' });
