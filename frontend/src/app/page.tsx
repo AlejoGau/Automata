@@ -45,11 +45,6 @@ interface Message {
   created_at: string;
 }
 
-interface Agent {
-  id: string;
-  name: string;
-  role: 'owner' | 'agent';
-}
 
 type TabType = 'chats' | 'leads' | 'dashboard' | 'settings';
 type SearchType = 'contacts' | 'messages';
@@ -61,139 +56,6 @@ const STAGES = [
   { id: "stage-4", name: "Ganado", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10" },
   { id: "stage-5", name: "Perdido", color: "border-rose-500/20 text-rose-400 bg-rose-500/5 hover:bg-rose-500/10" }
 ];
-
-// Datos Mock
-const MOCK_AGENTS: Agent[] = [
-  { id: "agent-1", name: "Alejo (Owner)", role: "owner" },
-  { id: "agent-2", name: "Nico (Colaborador)", role: "agent" }
-];
-
-
-const INITIAL_MOCK_LEADS: Lead[] = [
-  {
-    id: "lead-1",
-    name: "Alejandro Silva",
-    phone: "5491132456789",
-    source: "Instagram Ads",
-    stage_id: "stage-3", // En Negociación
-    created_at: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString()
-  },
-  {
-    id: "lead-2",
-    name: "Marta Gómez (Estudio Jurídico)",
-    phone: "5491158901234",
-    source: "Formulario Web",
-    stage_id: "stage-1", // Nuevo
-    created_at: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString()
-  },
-  {
-    id: "lead-3",
-    name: "Carlos Russo (Agencia)",
-    phone: "34612345678",
-    source: "Recomendado",
-    stage_id: "stage-2", // Contactado
-    created_at: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString()
-  },
-  {
-    id: "lead-4",
-    name: "Juan Pérez (E-Commerce)",
-    phone: "5491199998888",
-    source: "Google Search",
-    stage_id: "stage-4", // Ganado
-    created_at: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString()
-  }
-];
-
-const INITIAL_MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "convo-1",
-    status: "open",
-    last_message_at: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    assigned_agent_id: "agent-1",
-    leads: INITIAL_MOCK_LEADS[0]
-  },
-  {
-    id: "convo-2",
-    status: "open",
-    last_message_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    assigned_agent_id: null,
-    leads: INITIAL_MOCK_LEADS[1]
-  },
-  {
-    id: "convo-3",
-    status: "open",
-    last_message_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    assigned_agent_id: "agent-2",
-    leads: INITIAL_MOCK_LEADS[2]
-  },
-  {
-    id: "convo-4",
-    status: "open",
-    last_message_at: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
-    assigned_agent_id: "agent-1",
-    leads: INITIAL_MOCK_LEADS[3]
-  }
-];
-
-const INITIAL_MOCK_MESSAGES: Record<string, Message[]> = {
-  "convo-1": [
-    {
-      id: "msg-1-1",
-      conversation_id: "convo-1",
-      direction: "incoming",
-      content: "Hola! Vi su anuncio sobre automatización de procesos con IA. Me gustaría agendar una llamada.",
-      status: "read",
-      created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-    },
-    {
-      id: "msg-1-2",
-      conversation_id: "convo-1",
-      direction: "outgoing",
-      content: "Hola Alejandro! Qué tal? Claro que sí, desarrollamos agentes a medida. ¿De qué rubro es tu empresa?",
-      sender_id: "agent-1",
-      status: "read",
-      created_at: new Date(Date.now() - 25 * 60 * 1000).toISOString()
-    },
-    {
-      id: "msg-1-3",
-      conversation_id: "convo-1",
-      direction: "incoming",
-      content: "Es una distribuidora mayorista. Queremos automatizar la carga de pedidos que nos envían por audios y textos de WhatsApp.",
-      status: "read",
-      created_at: new Date(Date.now() - 20 * 60 * 1000).toISOString()
-    }
-  ],
-  "convo-2": [
-    {
-      id: "msg-2-1",
-      conversation_id: "convo-2",
-      direction: "incoming",
-      content: "Hola, me interesa implementar un chatbot para mi estudio. ¿Me envían info de precios?",
-      status: "read",
-      created_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
-    }
-  ],
-  "convo-3": [
-    {
-      id: "msg-3-1",
-      conversation_id: "convo-3",
-      direction: "incoming",
-      content: "Hola gente de Automata! Me recomendó Juan Pérez. Dijo que ustedes arman flujos en Make para clasificar leads.",
-      status: "read",
-      created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString()
-    }
-  ],
-  "convo-4": [
-    {
-      id: "msg-4-1",
-      conversation_id: "convo-4",
-      direction: "incoming",
-      content: "Hola. El bot ya procesó el pago del cliente Pérez. ¡Quedó perfecto!",
-      status: "read",
-      created_at: new Date(Date.now() - 10 * 3600 * 1000).toISOString()
-    }
-  ]
-};
 
 interface QuickReply {
   id: string;
@@ -243,8 +105,7 @@ export default function CRMWorkspace() {
 
   // --- NAVEGACIÓN ---
   const [activeTab, setActiveTab] = useState<TabType>('chats');
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
-  
+
   // Sockets e Inbox
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
@@ -293,7 +154,6 @@ export default function CRMWorkspace() {
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
-        setIsDemoMode(false);
       } else {
         setLoadingAuth(false);
       }
@@ -303,7 +163,6 @@ export default function CRMWorkspace() {
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
-        setIsDemoMode(false);
       } else {
         setUserProfile(null);
         setLoadingAuth(false);
@@ -350,26 +209,18 @@ export default function CRMWorkspace() {
 
   // Cargar datos principales
   useEffect(() => {
-    if (isDemoMode) {
-      setConversations(INITIAL_MOCK_CONVERSATIONS);
-      setLeads(INITIAL_MOCK_LEADS);
-      setMessages([]);
-      setSelectedConvoId(null);
-      setSelectedLeadId(null);
-    } else {
-      if (session) {
-        fetchConversations();
-        fetchLeads();
-      }
+    if (session) {
+      fetchConversations();
+      fetchLeads();
     }
-  }, [isDemoMode, session]);
+  }, [session]);
 
   // Cargar estadísticas si se entra a la pestaña Dashboard
   useEffect(() => {
     if (activeTab === 'dashboard') {
       fetchDashboardStats();
     }
-  }, [activeTab, isDemoMode, leads, conversations, messages]);
+  }, [activeTab, leads, conversations, messages]);
 
   // Búsqueda de mensajes (Fase 4)
   useEffect(() => {
@@ -393,12 +244,6 @@ export default function CRMWorkspace() {
 
   // Sockets setup
   useEffect(() => {
-    if (isDemoMode) {
-      if (socket.connected) socket.disconnect();
-      setSocketConnected(false);
-      return;
-    }
-
     socket.connect();
     
     socket.on('connect', () => setSocketConnected(true));
@@ -464,10 +309,10 @@ export default function CRMWorkspace() {
       socket.off('agent:typing_status');
       socket.off('conversation:assigned');
     };
-  }, [isDemoMode, selectedConvoId]);
+  }, [selectedConvoId]);
 
   useEffect(() => {
-    if (isDemoMode || !selectedConvoId) return;
+    if (!selectedConvoId) return;
 
     socket.emit('conversation:join', selectedConvoId);
     fetchMessages(selectedConvoId);
@@ -476,7 +321,7 @@ export default function CRMWorkspace() {
       socket.emit('conversation:leave', selectedConvoId);
       setTypingAgent(null);
     };
-  }, [selectedConvoId, isDemoMode]);
+  }, [selectedConvoId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -507,7 +352,7 @@ export default function CRMWorkspace() {
 
   // Importar los chats existentes de WhatsApp (Evolution) hacia el CRM
   const handleSyncChats = async () => {
-    if (isDemoMode || syncing) return;
+    if (syncing) return;
     setSyncing(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/conversations/sync`, {
@@ -557,91 +402,40 @@ export default function CRMWorkspace() {
   // Cargar estadísticas
   const fetchDashboardStats = async () => {
     setLoadingStats(true);
-    if (isDemoMode) {
-      // Calcular a partir de mock data local
-      const statsObj = {
-        leadsCount: leads.length,
-        leadsByStage: {
-          'stage-1': leads.filter(l => l.stage_id === 'stage-1').length,
-          'stage-2': leads.filter(l => l.stage_id === 'stage-2').length,
-          'stage-3': leads.filter(l => l.stage_id === 'stage-3').length,
-          'stage-4': leads.filter(l => l.stage_id === 'stage-4').length,
-          'stage-5': leads.filter(l => l.stage_id === 'stage-5').length,
-        },
-        conversations: {
-          total: conversations.length,
-          open: conversations.filter(c => c.status === 'open').length,
-          closed: conversations.filter(c => c.status === 'closed').length
-        },
-        messages: {
-          total: 6,
-          incoming: 4,
-          outgoing: 2
-        }
-      };
-      setDashboardStats(statsObj);
-      setLoadingStats(false);
-    } else {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/dashboard/stats`, { headers: getHeaders() });
-        if (res.ok) {
-          const data = await res.json();
-          setDashboardStats(data);
-        }
-      } catch (err) {
-        console.error("Error cargando estadísticas:", err);
-      } finally {
-        setLoadingStats(false);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/dashboard/stats`, { headers: getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setDashboardStats(data);
       }
+    } catch (err) {
+      console.error("Error cargando estadísticas:", err);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
   // Buscar mensajes (Fase 4)
   const searchMessages = async (query: string) => {
     setSearchingMessages(true);
-    if (isDemoMode) {
-      // Buscar en mock local
-      const results: any[] = [];
-      Object.entries(INITIAL_MOCK_MESSAGES).forEach(([convoId, msgs]) => {
-        const convo = conversations.find(c => c.id === convoId);
-        msgs.forEach(m => {
-          if (m.content.toLowerCase().includes(query.toLowerCase())) {
-            results.push({
-              id: m.id,
-              content: m.content,
-              direction: m.direction,
-              created_at: m.created_at,
-              conversation_id: m.conversation_id,
-              conversations: {
-                id: convoId,
-                leads: convo?.leads
-              }
-            });
-          }
-        });
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/messages/search?query=${encodeURIComponent(query)}`, {
+        headers: getHeaders()
       });
-      setMessageSearchResults(results);
-      setSearchingMessages(false);
-    } else {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/messages/search?query=${encodeURIComponent(query)}`, {
-          headers: getHeaders()
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setMessageSearchResults(data);
-        }
-      } catch (err) {
-        console.error("Error buscando mensajes:", err);
-      } finally {
-        setSearchingMessages(false);
+      if (res.ok) {
+        const data = await res.json();
+        setMessageSearchResults(data);
       }
+    } catch (err) {
+      console.error("Error buscando mensajes:", err);
+    } finally {
+      setSearchingMessages(false);
     }
   };
 
   const handleTypingSignal = (text: string) => {
     setMessageInput(text);
-    if (isDemoMode || !selectedConvoId) return;
+    if (!selectedConvoId) return;
 
     socket.emit('agent:typing', {
       conversationId: selectedConvoId,
@@ -667,61 +461,25 @@ export default function CRMWorkspace() {
       textareaRef.current.style.height = "auto";
     }
 
-    const currentAgentName = userProfile?.name || MOCK_AGENTS[0].name;
-    const currentAgentId = userProfile?.id || MOCK_AGENTS[0].id;
+    const currentAgentName = userProfile?.name || "Agente";
 
-    if (!isDemoMode) {
-      socket.emit('agent:typing', {
-        conversationId: selectedConvoId,
-        agentName: currentAgentName,
-        isTyping: false
+    socket.emit('agent:typing', {
+      conversationId: selectedConvoId,
+      agentName: currentAgentName,
+      isTyping: false
+    });
+
+    try {
+      await fetch(`${BACKEND_URL}/api/messages/send`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          conversationId: selectedConvoId,
+          content
+        })
       });
-    }
-
-    if (isDemoMode) {
-      const newMsg: Message = {
-        id: `msg-${Date.now()}`,
-        conversation_id: selectedConvoId,
-        direction: 'outgoing',
-        content,
-        sender_id: currentAgentId,
-        status: 'sent',
-        created_at: new Date().toISOString()
-      };
-
-      setMessages(prev => [...prev, newMsg]);
-      setConversations(prev => prev.map(c => 
-        c.id === selectedConvoId ? { ...c, last_message_at: new Date().toISOString() } : c
-      ));
-
-      setTimeout(() => {
-        const reply: Message = {
-          id: `msg-rep-${Date.now()}`,
-          conversation_id: selectedConvoId,
-          direction: 'incoming',
-          content: `Mensaje de simulación. Respondido como: ${currentAgentName}.`,
-          status: 'read',
-          created_at: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, reply]);
-        setMessages(prev => prev.map(m => m.id === newMsg.id ? { ...m, status: 'read' } : m));
-        setConversations(prev => prev.map(c => 
-          c.id === selectedConvoId ? { ...c, last_message_at: new Date().toISOString() } : c
-        ));
-      }, 1500);
-    } else {
-      try {
-        await fetch(`${BACKEND_URL}/api/messages/send`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({
-            conversationId: selectedConvoId,
-            content
-          })
-        });
-      } catch (err) {
-        console.error("Error enviando mensaje:", err);
-      }
+    } catch (err) {
+      console.error("Error enviando mensaje:", err);
     }
   };
 
@@ -754,28 +512,18 @@ export default function CRMWorkspace() {
     const leadId = e.dataTransfer.getData("text/plain");
     if (!leadId) return;
 
-    if (isDemoMode) {
-      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, stage_id: stageId } : l));
-      setConversations(prev => prev.map(c => {
-        if (c.leads && c.leads.id === leadId) {
-          return { ...c, leads: { ...c.leads, stage_id: stageId } };
-        }
-        return c;
-      }));
-    } else {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/leads/${leadId}/stage`, {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify({ stageId })
-        });
-        if (res.ok) {
-          fetchLeads();
-          fetchConversations();
-        }
-      } catch (err) {
-        console.error("Error moviendo lead:", err);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/leads/${leadId}/stage`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ stageId })
+      });
+      if (res.ok) {
+        fetchLeads();
+        fetchConversations();
       }
+    } catch (err) {
+      console.error("Error moviendo lead:", err);
     }
   };
 
@@ -791,64 +539,25 @@ export default function CRMWorkspace() {
 
     const cleanPhone = phone.replace(/[^0-9]/g, '');
 
-    if (isDemoMode) {
-      const newLead: Lead = {
-        id: `lead-new-${Date.now()}`,
-        name,
-        phone: cleanPhone,
-        source,
-        stage_id: stageId,
-        created_at: new Date().toISOString()
-      };
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/leads`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ name, phone: cleanPhone, source, stageId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        fetchLeads();
+        await fetchConversations();
 
-      const newConvo: Conversation = {
-        id: `convo-new-${Date.now()}`,
-        status: 'open',
-        last_message_at: new Date().toISOString(),
-        assigned_agent_id: null,
-        leads: newLead
-      };
+        setNewLeadForm({ name: "", phone: "", source: "Manual", stageId: "stage-1" });
+        setShowAddLeadModal(false);
 
-      setLeads(prev => [newLead, ...prev]);
-      setConversations(prev => [newConvo, ...prev]);
-      INITIAL_MOCK_MESSAGES[newConvo.id] = [
-        {
-          id: `msg-init-${Date.now()}`,
-          conversation_id: newConvo.id,
-          direction: 'incoming',
-          content: `Lead creado manualmente. Origen: ${source}.`,
-          status: 'sent',
-          created_at: new Date().toISOString()
-        }
-      ];
-
-      setNewLeadForm({ name: "", phone: "", source: "Manual", stageId: "stage-1" });
-      setShowAddLeadModal(false);
-      
-      setSelectedConvoId(newConvo.id);
-      setMessages(INITIAL_MOCK_MESSAGES[newConvo.id]);
-      setActiveTab('chats');
-    } else {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/leads`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ name, phone: cleanPhone, source, stageId })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          fetchLeads();
-          await fetchConversations();
-          
-          setNewLeadForm({ name: "", phone: "", source: "Manual", stageId: "stage-1" });
-          setShowAddLeadModal(false);
-          
-          setSelectedConvoId(data.conversationId);
-          setActiveTab('chats');
-        }
-      } catch (err) {
-        console.error("Error creando lead:", err);
+        setSelectedConvoId(data.conversationId);
+        setActiveTab('chats');
       }
+    } catch (err) {
+      console.error("Error creando lead:", err);
     }
   };
 
@@ -856,9 +565,6 @@ export default function CRMWorkspace() {
     const convo = conversations.find(c => c.leads && c.leads.id === leadId);
     if (convo) {
       setSelectedConvoId(convo.id);
-      if (isDemoMode) {
-        setMessages(INITIAL_MOCK_MESSAGES[convo.id] || []);
-      }
       setActiveTab('chats');
       setShowLeadDetails(false);
     } else {
@@ -869,23 +575,17 @@ export default function CRMWorkspace() {
   const handleManualAssign = async (agentId: string | null) => {
     if (!selectedConvoId) return;
 
-    if (isDemoMode) {
-      setConversations(prev => prev.map(c => 
-        c.id === selectedConvoId ? { ...c, assigned_agent_id: agentId } : c
-      ));
-    } else {
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/conversations/${selectedConvoId}/assign`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({ agentId })
-        });
-        if (res.ok) {
-          fetchConversations();
-        }
-      } catch (err) {
-        console.error("Error asignando conversación:", err);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/conversations/${selectedConvoId}/assign`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ agentId })
+      });
+      if (res.ok) {
+        fetchConversations();
       }
+    } catch (err) {
+      console.error("Error asignando conversación:", err);
     }
   };
 
@@ -908,7 +608,6 @@ export default function CRMWorkspace() {
       });
       if (error) throw error;
       setSession(data.session);
-      setIsDemoMode(false);
     } catch (err: any) {
       setAuthError(err.message || 'Error de inicio de sesión');
     }
@@ -938,7 +637,6 @@ export default function CRMWorkspace() {
       if (data.session) {
         // Confirmación de email desactivada: entra directo
         setSession(data.session);
-        setIsDemoMode(false);
       } else {
         // Supabase requiere confirmar el email antes de iniciar sesión
         setIsSignUp(false);
@@ -953,12 +651,6 @@ export default function CRMWorkspace() {
   };
 
   const handleLogout = async () => {
-    if (isDemoMode) {
-      setIsDemoMode(false);
-      setSession(null);
-      setUserProfile(null);
-      return;
-    }
     await supabase.auth.signOut();
   };
 
@@ -998,8 +690,8 @@ export default function CRMWorkspace() {
     );
   }
 
-  // Login obligatorio: sin sesión real de Supabase no se accede a la app (a menos que estemos en Modo Demo)
-  if (!session && !isDemoMode) {
+  // Login obligatorio: sin sesión real de Supabase no se accede a la app
+  if (!session) {
     return (
       <div className={`${loginThemeClass} flex h-screen w-screen bg-neutral-950 items-center justify-center overflow-hidden font-sans relative`}>
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/15 rounded-full blur-[140px] transition-colors duration-700" />
@@ -1347,11 +1039,11 @@ export default function CRMWorkspace() {
 
         {/* Perfil y Salida */}
         <div className="flex flex-col items-center gap-4 w-full px-2">
-          <div 
-            title={isDemoMode ? "Modo Simulador Activo" : `Conectado como ${userProfile?.name || "Agente"}`}
+          <div
+            title={`Conectado como ${userProfile?.name || "Agente"}`}
             className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-orange-400 font-bold text-xs select-none"
           >
-            {isDemoMode ? "D" : (userProfile?.name?.charAt(0) || "A")}
+            {userProfile?.name?.charAt(0) || "A"}
           </div>
 
           <button
@@ -1381,12 +1073,10 @@ export default function CRMWorkspace() {
                   {/* Status */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-950/60 border border-neutral-800/80 text-[10px] font-medium select-none">
                     <span className={`w-2 h-2 rounded-full ${
-                      isDemoMode 
-                        ? 'bg-amber-500 animate-pulse' 
-                        : (socketConnected ? 'bg-emerald-500' : 'bg-rose-500')
+                      socketConnected ? 'bg-emerald-500' : 'bg-rose-500'
                     }`} />
                     <span className="text-neutral-400">
-                      {isDemoMode ? 'Demo' : (socketConnected ? 'Online' : 'Offline')}
+                      {socketConnected ? 'Online' : 'Offline'}
                     </span>
                   </div>
                 </div>
@@ -1395,7 +1085,7 @@ export default function CRMWorkspace() {
                 <div className="text-[10.5px] p-2 bg-neutral-950/50 rounded-lg border border-neutral-800/60 text-neutral-400 flex items-center gap-2">
                   <User size={13} className="text-orange-400 shrink-0" />
                   <span className="truncate">
-                    Sesión: <strong className="text-neutral-200">{userProfile?.name || (isDemoMode ? "Alejo (Demo)" : "Cargando...")}</strong>
+                    Sesión: <strong className="text-neutral-200">{userProfile?.name || "Cargando..."}</strong>
                   </span>
                   <span className="ml-auto text-[9px] uppercase px-1.5 py-0.5 rounded bg-orange-950/40 text-orange-400 border border-orange-900/40 font-semibold">
                     {userProfile?.role || "agent"}
@@ -1405,7 +1095,7 @@ export default function CRMWorkspace() {
                 {/* Sincronizar chats existentes de WhatsApp (Evolution → CRM) */}
                 <button
                   onClick={handleSyncChats}
-                  disabled={syncing || isDemoMode}
+                  disabled={syncing}
                   title="Importar los chats que ya existen en WhatsApp"
                   className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-[11px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -1485,9 +1175,6 @@ export default function CRMWorkspace() {
                             key={convo.id}
                             onClick={() => {
                               setSelectedConvoId(convo.id);
-                              if (isDemoMode) {
-                                setMessages(INITIAL_MOCK_MESSAGES[convo.id] || []);
-                              }
                             }}
                             className={`flex flex-col p-4 cursor-pointer transition-all duration-300 border-l-4 ${
                               active 
@@ -1557,9 +1244,6 @@ export default function CRMWorkspace() {
                           key={res.id}
                           onClick={() => {
                             setSelectedConvoId(res.conversation_id);
-                            if (isDemoMode) {
-                              setMessages(INITIAL_MOCK_MESSAGES[res.conversation_id] || []);
-                            }
                             setSearchType('contacts');
                           }}
                           className="p-4 cursor-pointer hover:bg-neutral-900/30 transition-all border-b border-neutral-900 flex flex-col gap-1.5"
@@ -1620,11 +1304,7 @@ export default function CRMWorkspace() {
                           className="bg-neutral-900/60 border border-neutral-800 text-neutral-300 rounded-lg text-xs py-1.5 px-2.5 focus:outline-none"
                         >
                           <option value="">Sin Asignar</option>
-                          {isDemoMode ? (
-                            MOCK_AGENTS.map(a => <option key={a.id} value={a.id}>{a.name}</option>)
-                          ) : (
-                            userProfile && <option value={userProfile.id}>{userProfile.name} (Tú)</option>
-                          )}
+                          {userProfile && <option value={userProfile.id}>{userProfile.name} (Tú)</option>}
                         </select>
                       </div>
 
@@ -2084,44 +1764,6 @@ export default function CRMWorkspace() {
             </header>
 
             <div className="max-w-2xl space-y-6">
-              {/* Card Modo */}
-              <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-2xl p-6 backdrop-blur-md">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-orange-950/40 border border-orange-900/40 flex items-center justify-center text-orange-400">
-                      <Zap size={20} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">Modo de Ejecución</h3>
-                      <p className="text-xs text-neutral-400">Alterna entre simulación local y base de datos Supabase conectada.</p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setIsDemoMode(!isDemoMode)}
-                    className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                      isDemoMode
-                        ? 'bg-amber-950/40 border-amber-800/50 text-amber-400 hover:bg-amber-900/30'
-                        : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-400 hover:bg-emerald-900/30'
-                    }`}
-                  >
-                    {isDemoMode ? 'Activar Conexión Real' : 'Activar Modo Demo'}
-                  </button>
-                </div>
-
-                <div className="text-xs text-neutral-500 leading-relaxed bg-neutral-950/40 p-3 rounded-lg border border-neutral-900">
-                  {isDemoMode ? (
-                    <span className="flex items-center gap-1.5 text-amber-500">
-                      <AlertCircle size={14} /> Modo Demo Activo: Se ignoran las llamadas a la base de datos externa y Evolution API. Todo el chat se simula en memoria con respuestas automáticas.
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-emerald-500">
-                      <CheckCheck size={14} /> Conexión Real Activa: El cliente de Next.js buscará conectarse al servidor Express backend en {BACKEND_URL} y usar sesiones Supabase Auth.
-                    </span>
-                  )}
-                </div>
-              </div>
-
               {/* Card Salud del Entorno */}
               <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-2xl p-6 backdrop-blur-md space-y-4">
                 <h3 className="font-semibold text-white mb-2 flex items-center gap-2">
@@ -2147,10 +1789,8 @@ export default function CRMWorkspace() {
                       <h4 className="text-xs font-semibold text-neutral-300">Supabase Client</h4>
                       <p className="text-[10px] text-neutral-500 font-mono mt-1">Status RLS habilitado</p>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                      isDemoMode ? 'bg-neutral-800 text-neutral-400' : 'bg-emerald-950/50 text-emerald-400 border border-emerald-900/30'
-                    }`}>
-                      {isDemoMode ? 'Pausado' : 'Conectado'}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-emerald-950/50 text-emerald-400 border border-emerald-900/30">
+                      Conectado
                     </span>
                   </div>
                 </div>
