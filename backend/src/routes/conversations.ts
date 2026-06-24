@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { supabase } from '../supabase.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { fetchEvolutionChats, extractMessageContent } from '../services/evolution.js';
+import { fetchEvolutionChats, extractMessageContent, resolveIdentity } from '../services/evolution.js';
 
 const router = Router();
 
@@ -27,18 +27,31 @@ router.post('/sync', requireAuth, async (req: AuthenticatedRequest, res: Respons
 
     for (const chat of chats) {
       const jid: string | undefined = chat?.remoteJid;
-      // Saltar grupos y entradas sin JID
-      if (!jid || jid.includes('@g.us')) {
+      // Saltar grupos, broadcasts/estados y entradas sin JID
+      if (!jid || jid.includes('@g.us') || jid.includes('status@') || jid.startsWith('0@')) {
         skipped++;
         continue;
       }
 
-      const identifier = jid.split('@')[0];
-      const name = chat.pushName || identifier;
+      const rawId = jid.split('@')[0];
+      // Resolver @lid → número real (y mejor nombre) cuando se pueda
+      const resolved = await resolveIdentity(jid, chat.pushName);
+      const identifier = resolved.phone;
+      const name = resolved.name || chat.pushName || identifier;
       const lastMsg = chat.lastMessage;
       const ts = lastMsg?.messageTimestamp
         ? new Date(lastMsg.messageTimestamp * 1000).toISOString()
         : (chat.updatedAt || new Date().toISOString());
+
+      // Si resolvimos un @lid a un número real, borrar el lead viejo que había
+      // quedado guardado bajo el código LID (autolimpieza de imports previos).
+      if (identifier !== rawId) {
+        await supabase
+          .from('leads')
+          .delete()
+          .eq('phone', rawId)
+          .eq('workspace_id', user.workspace_id);
+      }
 
       // 1. Lead (upsert por teléfono + workspace)
       let leadId: string;

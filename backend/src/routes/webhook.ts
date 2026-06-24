@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { supabase } from '../supabase.js';
 import { Server as SocketServer } from 'socket.io';
+import { resolveIdentity } from '../services/evolution.js';
 
 const router = Router();
 
@@ -74,16 +75,19 @@ export function setupWebhookRouter(io: SocketServer) {
         }
 
         const remoteJid = key.remoteJid;
-        // Evitar procesar mensajes de grupos
-        if (remoteJid.includes('@g.us')) {
-          res.status(200).json({ status: 'ignored', reason: 'Group message' });
+        // Evitar procesar grupos, estados/broadcasts y el número 0 (WhatsApp Business)
+        if (remoteJid.includes('@g.us') || remoteJid.includes('status@') || remoteJid.startsWith('0@')) {
+          res.status(200).json({ status: 'ignored', reason: 'Group/status message' });
           return;
         }
 
-        const phone = remoteJid.split('@')[0];
+        // Resolver @lid → número real (y nombre) para que entrante y saliente
+        // queden bajo el mismo lead/teléfono.
+        const resolved = await resolveIdentity(remoteJid, msgData.pushName);
+        const phone = resolved.phone;
         const fromMe = !!key.fromMe;
         const externalId = key.id;
-        const pushName = msgData.pushName || phone;
+        const pushName = resolved.name || msgData.pushName || phone;
         const content = extractMessageContent(msgData.message);
         
         // Convertir timestamp a ISOString

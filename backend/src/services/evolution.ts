@@ -87,6 +87,92 @@ export async function fetchEvolutionChats(): Promise<any[]> {
 }
 
 /**
+ * Trae la lista de contactos de la instancia desde Evolution API.
+ */
+export async function fetchEvolutionContacts(): Promise<any[]> {
+  if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
+    throw new Error('Evolution API configurations are missing.');
+  }
+  const baseUrl = EVOLUTION_API_URL.endsWith('/')
+    ? EVOLUTION_API_URL.slice(0, -1)
+    : EVOLUTION_API_URL;
+  const url = `${baseUrl}/chat/findContacts/${EVOLUTION_INSTANCE_NAME}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': EVOLUTION_API_KEY },
+    body: JSON.stringify({})
+  });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return Array.isArray(data) ? data : (data?.contacts || []);
+}
+
+// ── Resolución de @lid → número real ──────────────────────────────────────
+// WhatsApp usa un identificador de privacidad "@lid" en vez del teléfono.
+// Evolution guarda el contacto @lid y el @s.whatsapp.net con la MISMA foto de
+// perfil, así que cruzamos por la base de la URL de la foto para mapear
+// LID → número real. Cacheamos el índice para no pegarle a Evolution en cada mensaje.
+let contactsIndexCache: { at: number; lidToPhone: Map<string, { phone: string; name?: string }> } | null = null;
+const CONTACTS_TTL_MS = 5 * 60 * 1000;
+
+function picBase(url?: string | null): string | null {
+  if (!url) return null;
+  const base = url.split('?')[0];
+  return base || null;
+}
+
+async function getContactsIndex() {
+  if (contactsIndexCache && Date.now() - contactsIndexCache.at < CONTACTS_TTL_MS) {
+    return contactsIndexCache;
+  }
+  const contacts = await fetchEvolutionContacts();
+  // Agrupar por base de foto para encontrar pares (lid, teléfono) de la misma persona
+  const byBase = new Map<string, { lid?: string; phone?: string; name?: string }>();
+  for (const c of contacts) {
+    const jid: string = c?.remoteJid || '';
+    const base = picBase(c?.profilePicUrl);
+    if (!base) continue;
+    const entry = byBase.get(base) || {};
+    if (jid.endsWith('@lid')) {
+      entry.lid = jid.split('@')[0];
+    } else if (jid.endsWith('@s.whatsapp.net')) {
+      const num = jid.split('@')[0];
+      if (/^\d{6,}$/.test(num) && num !== '0') entry.phone = num;
+    }
+    if (c?.pushName) entry.name = c.pushName;
+    byBase.set(base, entry);
+  }
+  const lidToPhone = new Map<string, { phone: string; name?: string }>();
+  for (const e of byBase.values()) {
+    if (e.lid && e.phone) lidToPhone.set(e.lid, { phone: e.phone, name: e.name });
+  }
+  contactsIndexCache = { at: Date.now(), lidToPhone };
+  return contactsIndexCache;
+}
+
+/**
+ * Dado un remoteJid de WhatsApp, devuelve el teléfono real y el nombre.
+ * Resuelve los identificadores de privacidad "@lid" al número real cuando se puede.
+ */
+export async function resolveIdentity(
+  remoteJid: string,
+  pushName?: string | null
+): Promise<{ phone: string; name?: string }> {
+  const num = remoteJid.split('@')[0];
+  if (remoteJid.endsWith('@lid')) {
+    try {
+      const idx = await getContactsIndex();
+      const match = idx.lidToPhone.get(num);
+      if (match) return { phone: match.phone, name: pushName || match.name };
+    } catch (e) {
+      // si falla la resolución, caemos al LID
+    }
+  }
+  return { phone: num, name: pushName || undefined };
+}
+
+/**
  * Extrae el texto legible de las distintas estructuras de mensaje de WhatsApp.
  */
 export function extractMessageContent(message: any): string {
