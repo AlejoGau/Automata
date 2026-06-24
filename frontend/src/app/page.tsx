@@ -280,6 +280,7 @@ export default function CRMWorkspace() {
   const [backendStatus, setBackendStatus] = useState<'online' | 'offline' | 'checking'>('checking');
   const [socketConnected, setSocketConnected] = useState<boolean>(false);
   const [loadingData, setLoadingData] = useState<boolean>(false);
+  const [syncing, setSyncing] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -501,6 +502,31 @@ export default function CRMWorkspace() {
       console.error("Error cargando chats:", e);
     } finally {
       setLoadingData(false);
+    }
+  };
+
+  // Importar los chats existentes de WhatsApp (Evolution) hacia el CRM
+  const handleSyncChats = async () => {
+    if (isDemoMode || syncing) return;
+    setSyncing(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/conversations/sync`, {
+        method: 'POST',
+        headers: getHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        await fetchConversations();
+        await fetchLeads();
+        alert(`Sincronización lista: ${data.synced} chats importados (${data.skipped} grupos omitidos).`);
+      } else {
+        alert('No se pudo sincronizar. Revisá la conexión con Evolution API.');
+      }
+    } catch (e) {
+      console.error("Error sincronizando chats:", e);
+      alert('Error al sincronizar los chats.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -1375,6 +1401,17 @@ export default function CRMWorkspace() {
                     {userProfile?.role || "agent"}
                   </span>
                 </div>
+
+                {/* Sincronizar chats existentes de WhatsApp (Evolution → CRM) */}
+                <button
+                  onClick={handleSyncChats}
+                  disabled={syncing || isDemoMode}
+                  title="Importar los chats que ya existen en WhatsApp"
+                  className="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-[11px] font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
+                  {syncing ? 'Sincronizando con WhatsApp...' : 'Sincronizar chats de WhatsApp'}
+                </button>
 
                 {/* Filtro / Selector de Búsqueda (Fase 4 - NEW) */}
                 <div className="flex flex-col gap-2">

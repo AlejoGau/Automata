@@ -53,3 +53,52 @@ export async function sendWhatsAppMessage(phone: string, text: string): Promise<
     throw error;
   }
 }
+
+/**
+ * Trae la lista de chats existentes de la instancia desde Evolution API.
+ * Sirve para importar al CRM las conversaciones que ya existen en WhatsApp.
+ */
+export async function fetchEvolutionChats(): Promise<any[]> {
+  if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
+    throw new Error('Evolution API configurations are missing.');
+  }
+
+  const baseUrl = EVOLUTION_API_URL.endsWith('/')
+    ? EVOLUTION_API_URL.slice(0, -1)
+    : EVOLUTION_API_URL;
+  const url = `${baseUrl}/chat/findChats/${EVOLUTION_INSTANCE_NAME}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': EVOLUTION_API_KEY
+    },
+    body: JSON.stringify({})
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`findChats falló con estado ${response.status}: ${errorText}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) ? data : (data?.chats || []);
+}
+
+/**
+ * Extrae el texto legible de las distintas estructuras de mensaje de WhatsApp.
+ */
+export function extractMessageContent(message: any): string {
+  if (!message) return '';
+  if (typeof message === 'string') return message;
+  if (message.conversation) return message.conversation;
+  if (message.extendedTextMessage?.text) return message.extendedTextMessage.text;
+  if (message.imageMessage?.caption) return message.imageMessage.caption;
+  if (message.videoMessage?.caption) return message.videoMessage.caption;
+  if (message.imageMessage) return '[Imagen]';
+  if (message.videoMessage) return '[Video]';
+  if (message.documentMessage) return '[Documento]';
+  if (message.audioMessage) return '[Audio]';
+  return '[Mensaje no soportado]';
+}
