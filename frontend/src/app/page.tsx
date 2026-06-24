@@ -195,6 +195,35 @@ const INITIAL_MOCK_MESSAGES: Record<string, Message[]> = {
   ]
 };
 
+interface QuickReply {
+  id: string;
+  name: string;
+  content: string;
+}
+
+const QUICK_REPLIES: QuickReply[] = [
+  {
+    id: "qr-1",
+    name: "👋 Saludo inicial",
+    content: "¡Hola! Gracias por contactarte con Automata. ¿En qué podemos ayudarte hoy?"
+  },
+  {
+    id: "qr-2",
+    name: "💰 Precios de Servicios",
+    content: "Nuestros planes de automatización a medida comienzan desde USD 300/mes. ¿Te gustaría agendar una llamada de 15 minutos para relevar tu caso?"
+  },
+  {
+    id: "qr-3",
+    name: "📅 Agendar Reunión",
+    content: "Te comparto nuestro link de Calendly para coordinar una llamada cuando te quede cómodo: https://calendly.com/automata"
+  },
+  {
+    id: "qr-4",
+    name: "👋 Despedida",
+    content: "¡Quedamos a tu disposición! Cualquier consulta nos escribís por acá. ¡Que tengas un excelente día!"
+  }
+];
+
 export default function CRMWorkspace() {
   // --- AUTENTICACIÓN ---
   const [session, setSession] = useState<any>(null);
@@ -214,7 +243,7 @@ export default function CRMWorkspace() {
 
   // --- NAVEGACIÓN ---
   const [activeTab, setActiveTab] = useState<TabType>('chats');
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
   
   // Sockets e Inbox
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -253,6 +282,8 @@ export default function CRMWorkspace() {
   const [loadingData, setLoadingData] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showQuickReplies, setShowQuickReplies] = useState<boolean>(false);
   const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   // Escuchar sesión
@@ -450,6 +481,13 @@ export default function CRMWorkspace() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingAgent]);
 
+  useEffect(() => {
+    setMessageInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [selectedConvoId]);
+
   // Cargar datos
   const fetchConversations = async () => {
     setLoadingData(true);
@@ -584,15 +622,24 @@ export default function CRMWorkspace() {
       agentName: userProfile?.name || "Agente",
       isTyping: text.length > 0
     });
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
   };
 
   // Enviar mensaje
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async (e?: React.FormEvent | React.KeyboardEvent) => {
+    if (e) e.preventDefault();
     if (!messageInput.trim() || !selectedConvoId) return;
 
     const content = messageInput.trim();
     setMessageInput("");
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
 
     const currentAgentName = userProfile?.name || MOCK_AGENTS[0].name;
     const currentAgentId = userProfile?.id || MOCK_AGENTS[0].id;
@@ -650,6 +697,24 @@ export default function CRMWorkspace() {
         console.error("Error enviando mensaje:", err);
       }
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
+
+  const handleSelectQuickReply = (content: string) => {
+    handleTypingSignal(content);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.selectionStart = content.length;
+        textareaRef.current.selectionEnd = content.length;
+      }
+    }, 10);
   };
 
   // Drag and Drop
@@ -890,6 +955,13 @@ export default function CRMWorkspace() {
     : userProfile?.role === 'agent' ? 'theme-ferro'
     : '';
 
+  // En el login el tema cambia EN VIVO según la tarjeta elegida:
+  // Alejo → rojo y azul (San Lorenzo) · Nico → verde y negro
+  const loginThemeClass =
+    selectedAgent === 'nico' ? 'theme-ferro'
+    : selectedAgent === 'alejo' ? 'theme-sanlorenzo'
+    : '';
+
   // Pantalla de carga Auth
   if (loadingAuth) {
     return (
@@ -900,14 +972,14 @@ export default function CRMWorkspace() {
     );
   }
 
-  // Login obligatorio: sin sesión real de Supabase no se accede a la app
-  if (!session) {
+  // Login obligatorio: sin sesión real de Supabase no se accede a la app (a menos que estemos en Modo Demo)
+  if (!session && !isDemoMode) {
     return (
-      <div className="flex h-screen w-screen bg-neutral-950 items-center justify-center overflow-hidden font-sans relative">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/15 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[50%] bg-amber-500/10 rounded-full blur-[140px]" />
+      <div className={`${loginThemeClass} flex h-screen w-screen bg-neutral-950 items-center justify-center overflow-hidden font-sans relative`}>
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/15 rounded-full blur-[140px] transition-colors duration-700" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[50%] bg-amber-500/10 rounded-full blur-[140px] transition-colors duration-700" />
 
-        <div className="bg-neutral-900/40 border border-neutral-800/80 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10 mx-4">
+        <div className="app-enter bg-neutral-900/40 border border-neutral-800/80 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10 mx-4">
           <div className="flex flex-col items-center mb-6">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center font-bold text-white shadow-xl shadow-orange-500/25 mb-4">
               A
@@ -1169,7 +1241,7 @@ export default function CRMWorkspace() {
 
   // PANEL PRINCIPAL
   return (
-    <div className={`${themeClass} flex h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden font-sans relative`}>
+    <div className={`${themeClass} app-enter flex h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden font-sans relative`}>
       
       {/* Radial glows */}
       <div className="absolute top-[-15%] left-[-5%] w-[45%] h-[45%] bg-orange-600/15 rounded-full blur-[130px] pointer-events-none" />
@@ -1190,8 +1262,8 @@ export default function CRMWorkspace() {
               onClick={() => setActiveTab('chats')}
               className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center relative group ${
                 activeTab === 'chats'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20'
-                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20 scale-110'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40 hover:scale-105'
               }`}
             >
               <MessageSquare size={20} />
@@ -1205,8 +1277,8 @@ export default function CRMWorkspace() {
               onClick={() => setActiveTab('leads')}
               className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center relative group ${
                 activeTab === 'leads'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20'
-                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20 scale-110'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40 hover:scale-105'
               }`}
             >
               <Layers size={20} />
@@ -1220,8 +1292,8 @@ export default function CRMWorkspace() {
               onClick={() => setActiveTab('dashboard')}
               className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center relative group ${
                 activeTab === 'dashboard'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20'
-                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20 scale-110'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40 hover:scale-105'
               }`}
             >
               <BarChart3 size={20} />
@@ -1235,8 +1307,8 @@ export default function CRMWorkspace() {
               onClick={() => setActiveTab('settings')}
               className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center relative group ${
                 activeTab === 'settings'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20'
-                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20 scale-110'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40 hover:scale-105'
               }`}
             >
               <Settings size={20} />
@@ -1267,7 +1339,8 @@ export default function CRMWorkspace() {
       </nav>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* key={activeTab} fuerza el remonte al cambiar de solapa → reanima .tab-enter */}
+      <div key={activeTab} className="flex-1 flex overflow-hidden tab-enter">
 
         {/* VISTA 1: CHATS (CON BÚSQUEDA AVANZADA) */}
         {activeTab === 'chats' && (
@@ -1597,13 +1670,59 @@ export default function CRMWorkspace() {
                   </div>
 
                   {/* Chat Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-800/60 bg-neutral-900/10 backdrop-blur-md flex items-center gap-3">
-                    <input
-                      type="text"
+                  <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-800/60 bg-neutral-900/10 backdrop-blur-md flex items-center gap-3 relative">
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickReplies(!showQuickReplies)}
+                        className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${
+                          showQuickReplies 
+                            ? 'bg-orange-500/20 border-orange-500 text-orange-400' 
+                            : 'bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                        }`}
+                        title="Respuestas Rápidas"
+                      >
+                        <Zap size={18} />
+                      </button>
+                      
+                      {showQuickReplies && (
+                        <div className="absolute bottom-12 left-0 w-72 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                          <div className="px-2 py-1.5 border-b border-neutral-800/60 text-[10px] font-bold uppercase text-neutral-500 tracking-wider">
+                            Respuestas Rápidas
+                          </div>
+                          <div className="mt-1 max-h-60 overflow-y-auto divide-y divide-neutral-800/40 custom-scrollbar">
+                            {QUICK_REPLIES.map(qr => (
+                              <button
+                                key={qr.id}
+                                type="button"
+                                onClick={() => {
+                                  handleSelectQuickReply(qr.content);
+                                  setShowQuickReplies(false);
+                                }}
+                                className="w-full text-left p-2.5 hover:bg-neutral-800/40 rounded-lg transition-colors flex flex-col gap-1 group"
+                              >
+                                <span className="text-xs font-semibold text-neutral-200 group-hover:text-orange-400 transition-colors">
+                                  {qr.name}
+                                </span>
+                                <span className="text-[10px] text-neutral-400 line-clamp-2">
+                                  {qr.content}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <textarea
+                      ref={textareaRef}
+                      rows={1}
                       placeholder={`Escribe una respuesta...`}
                       value={messageInput}
                       onChange={(e) => handleTypingSignal(e.target.value)}
-                      className="flex-1 bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-500 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
+                      onKeyDown={handleKeyDown}
+                      className="flex-1 bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-500 text-sm px-4 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors resize-none min-h-[42px] max-h-[140px] overflow-y-auto custom-scrollbar"
+                      style={{ height: 'auto' }}
                     />
                     <button
                       type="submit"

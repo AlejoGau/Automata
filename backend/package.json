@@ -8,7 +8,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "webhook:setup": "tsx src/setupWebhook.ts"
+    "webhook:setup": "tsx src/setupWebhook.ts",
+    "send:test": "tsx src/sendTest.ts"
   },
   "keywords": [],
   "author": "",

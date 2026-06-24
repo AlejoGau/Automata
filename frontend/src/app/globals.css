@@ -54,7 +54,7 @@ body {
   --color-amber-950: #0f1d4d;
 }
 
-/* FERRO CARRIL OESTE (Nico / agent) → todo VERDE CLARITO */
+/* NICO (agent) → primario VERDE, secundario NEGRO */
 .theme-ferro {
   --color-orange-200: #bbf7d0;
   --color-orange-300: #86efac;
@@ -66,15 +66,18 @@ body {
   --color-orange-900: #14532d;
   --color-orange-950: #052e16;
 
-  --color-amber-200: #d9f99d;
-  --color-amber-300: #bef264;
-  --color-amber-400: #a3e635;
-  --color-amber-500: #84cc16;
-  --color-amber-600: #65a30d;
-  --color-amber-700: #4d7c0f;
-  --color-amber-800: #3f6212;
-  --color-amber-900: #365314;
-  --color-amber-950: #1a2e05;
+  /* Acento = NEGRO. Los tonos claros (200-400) quedan en gris claro
+     para que los textos sigan siendo legibles; los oscuros (500-950)
+     van a negro para fondos, gradientes y bordes. */
+  --color-amber-200: #e5e5e5;
+  --color-amber-300: #d4d4d4;
+  --color-amber-400: #a3a3a3;
+  --color-amber-500: #404040;
+  --color-amber-600: #2e2e2e;
+  --color-amber-700: #1f1f1f;
+  --color-amber-800: #171717;
+  --color-amber-900: #0f0f0f;
+  --color-amber-950: #0a0a0a;
 }
 
 /* Selección de texto en el color de marca activo */
@@ -115,4 +118,53 @@ body {
     transparent 1px
   );
   background-size: 22px 22px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ANIMACIONES DE INTERFAZ (livianas, GPU-friendly)
+   Solo animan opacity/transform para no causar reflow.
+   Curva "ease-out expo" para una sensación pulida y profesional.
+   ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Transición al cambiar de solapa (se dispara vía key={activeTab}) */
+.tab-enter {
+  animation: fadeInUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Entrada inicial: tarjeta de login y panel principal */
+.app-enter {
+  animation: scaleIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Entrada lateral suave para listas/asides */
+.slide-in {
+  animation: slideInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Accesibilidad: si el usuario pide menos movimiento, lo respetamos */
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter,
+  .app-enter,
+  .slide-in {
+    animation: none;
+  }
 }
