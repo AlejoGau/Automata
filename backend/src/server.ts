@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { setupWebhookRouter } from './routes/webhook.js';
+import { setupWebhookCloudRouter } from './routes/webhookCloud.js';
 import { setupMessagesRouter } from './routes/messages.js';
 import conversationsRouter from './routes/conversations.js';
 import leadsRouter from './routes/leads.js';
@@ -21,7 +22,14 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json({ limit: '10mb' }));
+// Guardamos el cuerpo crudo (rawBody) para poder validar la firma
+// X-Hub-Signature-256 que manda Meta en los webhooks de Cloud API.
+app.use(express.json({
+  limit: '10mb',
+  verify: (req, _res, buf) => {
+    (req as any).rawBody = buf;
+  }
+}));
 
 // Crear Servidor HTTP
 const httpServer = createServer(app);
@@ -63,6 +71,7 @@ io.on('connection', (socket) => {
 
 // Registrar Rutas
 app.use('/api/webhooks', setupWebhookRouter(io));
+app.use('/api/webhooks/cloud', setupWebhookCloudRouter(io));
 app.use('/api/messages', setupMessagesRouter(io));
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/leads', leadsRouter);

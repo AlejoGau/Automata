@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { supabase } from '../supabase.js';
-import { sendWhatsAppMessage } from '../services/evolution.js';
+import { sendText } from '../services/messaging.js';
 import { Server as SocketServer } from 'socket.io';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
@@ -150,15 +150,15 @@ export function setupMessagesRouter(io: SocketServer) {
         conversationId: conversationId
       });
 
-      // 4. Despachar a WhatsApp mediante Evolution API
+      // 4. Despachar a WhatsApp por el proveedor activo (Evolution o Cloud API)
       let apiResult;
       try {
-        apiResult = await sendWhatsAppMessage(lead.phone, content);
+        apiResult = await sendText(lead.phone, content);
       } catch (apiError: any) {
-        console.error('Error al enviar mensaje por Evolution API:', apiError);
-        
+        console.error('Error al enviar mensaje por WhatsApp:', apiError);
+
         // Si falla la llamada externa, dejamos constancia
-        res.status(500).json({ 
+        res.status(500).json({
           error: 'Error al enviar por WhatsApp. Revisa la conexión de la API.',
           details: apiError.message,
           message: tempMsg
@@ -167,7 +167,7 @@ export function setupMessagesRouter(io: SocketServer) {
       }
 
       // 5. Actualizar con el external_id real de WhatsApp devuelto por la API
-      const externalId = apiResult?.key?.id || apiResult?.messageId || null;
+      const externalId = apiResult.externalId;
 
       const { data: finalMsg, error: updateError } = await supabase
         .from('messages')

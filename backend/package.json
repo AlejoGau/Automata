@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "webhook:setup": "tsx src/setupWebhook.ts",
-    "send:test": "tsx src/sendTest.ts"
+    "send:test": "tsx src/sendTest.ts",
+    "send:cloud": "tsx src/sendTestCloud.ts"
   },
   "keywords": [],
   "author": "",
