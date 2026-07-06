@@ -775,6 +775,36 @@ export default function CRMWorkspace() {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Formatea un teléfono (solo dígitos) a algo legible. Best-effort para
+  // Argentina (549 + área + número); para el resto agrupa de a bloques.
+  const formatPhone = (raw?: string | null) => {
+    const d = (raw || "").replace(/\D/g, "");
+    if (!d) return "";
+    if (d.startsWith("549")) {
+      const rest = d.slice(3); // área + número
+      const m = rest.match(/^(\d{2,4})(\d{4})(\d{4})$/);
+      if (m) return `+54 9 ${m[1]} ${m[2]}-${m[3]}`;
+      return `+54 9 ${rest}`;
+    }
+    if (d.startsWith("54")) return `+54 ${d.slice(2)}`;
+    return `+${d}`;
+  };
+
+  // Decide qué mostrar para un lead: si el "nombre" tiene letras es un nombre
+  // real; si es solo dígitos (o vacío) es el propio teléfono, así evitamos
+  // mostrar el número dos veces.
+  const getLeadDisplay = (lead?: { name?: string | null; phone?: string | null }) => {
+    const name = (lead?.name || "").trim();
+    const phone = lead?.phone || "";
+    const hasRealName = /[a-zA-ZáéíóúñÁÉÍÓÚÑ]/.test(name);
+    return {
+      title: hasRealName ? name : formatPhone(phone),
+      phone: formatPhone(phone),
+      // subtítulo: solo si hay nombre real (si no, ya está el número en el título)
+      subtitle: hasRealName ? formatPhone(phone) : null,
+    };
+  };
+
   const getLeadById = (id: string | null) => leads.find(l => l.id === id);
 
   const selectedLead = selectedLeadId ? getLeadById(selectedLeadId) : null;
@@ -1335,8 +1365,8 @@ export default function CRMWorkspace() {
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold text-sm text-neutral-200">
-                                {convo.leads?.name}
+                              <span className="font-semibold text-sm text-neutral-200 truncate">
+                                {getLeadDisplay(convo.leads).title}
                               </span>
                               <span className="text-[10px] text-neutral-500 shrink-0 font-medium">
                                 {formatTime(convo.last_message_at)}
@@ -1344,7 +1374,11 @@ export default function CRMWorkspace() {
                             </div>
 
                             <div className="flex items-center justify-between mb-2 text-xs">
-                              <span className="text-neutral-400 font-mono">+{convo.leads?.phone}</span>
+                              {getLeadDisplay(convo.leads).subtitle ? (
+                                <span className="text-neutral-400 font-mono">{getLeadDisplay(convo.leads).subtitle}</span>
+                              ) : (
+                                <span className="text-neutral-600 italic text-[11px]">Sin nombre</span>
+                              )}
                               {stage && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-neutral-950/60 border border-neutral-800/80 text-orange-400 font-medium">
                                   {stage.name}
@@ -1431,19 +1465,19 @@ export default function CRMWorkspace() {
                   <header className="h-16 px-4 border-b border-neutral-700 bg-neutral-900 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700/50 flex items-center justify-center font-semibold text-neutral-300 relative text-sm select-none">
-                        {currentConvo.leads?.name.charAt(0)}
+                        {getLeadDisplay(currentConvo.leads).title.charAt(0).toUpperCase()}
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-neutral-950" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">{currentConvo.leads?.name}</span>
+                          <span className="font-semibold text-sm">{getLeadDisplay(currentConvo.leads).title}</span>
                           {STAGES.find(s => s.id === currentConvo.leads?.stage_id) && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/30 border border-amber-900/50 text-amber-400 font-medium">
                               {STAGES.find(s => s.id === currentConvo.leads?.stage_id)?.name}
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-neutral-400 font-mono">+{currentConvo.leads?.phone}</span>
+                        <span className="text-xs text-neutral-400 font-mono">{getLeadDisplay(currentConvo.leads).phone}</span>
                       </div>
                     </div>
 
@@ -1701,11 +1735,11 @@ export default function CRMWorkspace() {
                             }}
                             className="bg-neutral-900/40 backdrop-blur-md border border-neutral-800/80 hover:border-orange-500/50 p-4 rounded-xl cursor-grab active:cursor-grabbing hover:shadow-lg hover:shadow-orange-500/5 transition-all group duration-300"
                           >
-                            <h4 className="font-semibold text-sm text-neutral-200 group-hover:text-orange-400 transition-colors mb-1">
-                              {lead.name}
+                            <h4 className="font-semibold text-sm text-neutral-200 group-hover:text-orange-400 transition-colors mb-1 truncate">
+                              {getLeadDisplay(lead).title}
                             </h4>
                             <span className="text-xs text-neutral-500 font-mono block mb-3">
-                              +{lead.phone}
+                              {getLeadDisplay(lead).subtitle || <span className="italic">Sin nombre</span>}
                             </span>
                             
                             <div className="flex items-center justify-between pt-2 border-t border-neutral-800/40 text-[10px] text-neutral-400">
@@ -1984,12 +2018,14 @@ export default function CRMWorkspace() {
           <div className="space-y-4">
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider block mb-1">Nombre Comercial</label>
-              <div className="text-sm font-semibold text-white">{selectedLead.name}</div>
+              <div className="text-sm font-semibold text-white">
+                {getLeadDisplay(selectedLead).subtitle ? selectedLead.name : <span className="text-neutral-500 italic font-normal">Sin nombre</span>}
+              </div>
             </div>
-            
+
             <div>
               <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider block mb-1">WhatsApp de Contacto</label>
-              <div className="text-sm font-mono text-neutral-300">+{selectedLead.phone}</div>
+              <div className="text-sm font-mono text-neutral-300">{formatPhone(selectedLead.phone)}</div>
             </div>
 
             <div>
