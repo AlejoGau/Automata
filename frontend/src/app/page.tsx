@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Search, Send, MessageSquare, Phone, User, Users, Clock, 
-  Check, CheckCheck, Circle, Zap, RefreshCw, Layers, ShieldAlert,
+import {
+  Search, Send, MessageSquare, Phone, User, Users, Clock,
+  Check, CheckCheck, Circle, Zap, RefreshCw, Layers, Rocket, ShieldAlert,
   Calendar, AlertCircle, FileText, Settings, Plus, Tag, LogOut, Lock, Mail, Database,
-  BarChart3, HelpCircle, Activity, ChevronRight, ArrowUpRight, ArrowDownLeft
+  BarChart3, HelpCircle, Activity, ChevronRight, ArrowUpRight, ArrowDownLeft, Megaphone, X
 } from "lucide-react";
 import { socket } from "@/lib/socket";
 import { supabase } from "@/lib/supabase";
@@ -86,6 +86,85 @@ const QUICK_REPLIES: QuickReply[] = [
   }
 ];
 
+// ── Datos estáticos del fondo del login ──────────────────────────────────────
+const STARS = [
+  { top: 2,  left: 6,  size: 1, dur: 3.2, del: 0.3 },
+  { top: 4,  left: 22, size: 2, dur: 2.8, del: 1.1 },
+  { top: 1,  left: 38, size: 1, dur: 4.0, del: 0.7 },
+  { top: 6,  left: 58, size: 2, dur: 3.5, del: 1.8 },
+  { top: 3,  left: 76, size: 1, dur: 2.5, del: 0.5 },
+  { top: 8,  left: 89, size: 2, dur: 3.8, del: 2.1 },
+  { top: 2,  left: 95, size: 1, dur: 4.2, del: 0.9 },
+  { top: 12, left: 4,  size: 2, dur: 3.1, del: 1.4 },
+  { top: 18, left: 14, size: 1, dur: 2.7, del: 0.6 },
+  { top: 15, left: 28, size: 2, dur: 3.9, del: 2.0 },
+  { top: 22, left: 8,  size: 1, dur: 4.1, del: 0.2 },
+  { top: 11, left: 68, size: 1, dur: 2.9, del: 1.7 },
+  { top: 16, left: 78, size: 2, dur: 3.4, del: 0.4 },
+  { top: 20, left: 88, size: 1, dur: 3.7, del: 1.9 },
+  { top: 14, left: 96, size: 2, dur: 2.6, del: 0.8 },
+  { top: 25, left: 94, size: 1, dur: 4.3, del: 1.3 },
+  { top: 32, left: 3,  size: 2, dur: 3.0, del: 0.5 },
+  { top: 38, left: 12, size: 1, dur: 3.6, del: 1.6 },
+  { top: 44, left: 6,  size: 2, dur: 2.8, del: 0.2 },
+  { top: 35, left: 20, size: 1, dur: 4.0, del: 2.2 },
+  { top: 30, left: 75, size: 2, dur: 3.3, del: 0.7 },
+  { top: 36, left: 84, size: 1, dur: 2.9, del: 1.5 },
+  { top: 42, left: 91, size: 2, dur: 3.7, del: 0.3 },
+  { top: 48, left: 78, size: 1, dur: 4.1, del: 1.0 },
+  { top: 45, left: 97, size: 2, dur: 3.2, del: 2.0 },
+  { top: 28, left: 45, size: 1, dur: 3.5, del: 1.2 },
+  { top: 35, left: 62, size: 1, dur: 4.4, del: 0.6 },
+  { top: 50, left: 38, size: 1, dur: 3.1, del: 1.8 },
+  { top: 45, left: 55, size: 1, dur: 2.7, del: 0.9 },
+  { top: 55, left: 5,  size: 2, dur: 3.8, del: 1.4 },
+  { top: 62, left: 15, size: 1, dur: 2.6, del: 0.1 },
+  { top: 68, left: 8,  size: 2, dur: 4.0, del: 1.7 },
+  { top: 58, left: 25, size: 1, dur: 3.4, del: 0.5 },
+  { top: 72, left: 18, size: 2, dur: 2.9, del: 2.1 },
+  { top: 52, left: 80, size: 2, dur: 3.6, del: 0.3 },
+  { top: 60, left: 90, size: 1, dur: 4.2, del: 1.9 },
+  { top: 65, left: 75, size: 2, dur: 3.0, del: 0.7 },
+  { top: 70, left: 85, size: 1, dur: 3.8, del: 1.3 },
+  { top: 78, left: 92, size: 2, dur: 2.7, del: 0.4 },
+  { top: 80, left: 10, size: 1, dur: 4.3, del: 1.1 },
+  { top: 85, left: 22, size: 2, dur: 3.2, del: 0.8 },
+  { top: 82, left: 35, size: 1, dur: 3.7, del: 2.3 },
+  { top: 87, left: 65, size: 2, dur: 3.1, del: 0.2 },
+  { top: 83, left: 78, size: 1, dur: 4.0, del: 1.6 },
+  { top: 90, left: 88, size: 2, dur: 2.8, del: 0.6 },
+  { top: 92, left: 15, size: 1, dur: 3.5, del: 1.0 },
+  { top: 95, left: 30, size: 2, dur: 4.1, del: 0.3 },
+  { top: 93, left: 70, size: 1, dur: 3.3, del: 1.8 },
+  { top: 97, left: 85, size: 2, dur: 2.6, del: 0.9 },
+  { top: 96, left: 5,  size: 1, dur: 4.4, del: 0.5 },
+  { top: 98, left: 50, size: 1, dur: 3.0, del: 2.0 },
+];
+
+const EXHAUST = [
+  { offset:  -4, size: 10, dur: 2.1, del: 0.00, drift:   0, color: '#ffffff' },
+  { offset: -12, size:  7, dur: 1.7, del: 0.15, drift: -18, color: '#fef08a' },
+  { offset:   8, size:  8, dur: 1.9, del: 0.30, drift:  22, color: '#fcd34d' },
+  { offset: -28, size:  5, dur: 1.5, del: 0.45, drift: -30, color: '#fb923c' },
+  { offset:  22, size:  6, dur: 1.8, del: 0.10, drift:  28, color: '#fbbf24' },
+  { offset:  -2, size:  9, dur: 2.0, del: 0.60, drift:   5, color: '#ffffff' },
+  { offset: -20, size:  6, dur: 1.6, del: 0.25, drift: -22, color: '#fdba74' },
+  { offset:  15, size:  7, dur: 1.7, del: 0.80, drift:  20, color: '#fcd34d' },
+  { offset: -36, size:  4, dur: 1.4, del: 0.50, drift: -40, color: '#f97316' },
+  { offset:  34, size:  5, dur: 1.6, del: 0.35, drift:  38, color: '#ea580c' },
+  { offset:   4, size:  8, dur: 1.9, del: 0.70, drift:  -8, color: '#fef9c3' },
+  { offset: -16, size:  5, dur: 1.5, del: 0.90, drift: -12, color: '#fb923c' },
+  { offset:  28, size:  6, dur: 1.8, del: 0.20, drift:  25, color: '#f97316' },
+  { offset: -44, size:  4, dur: 1.6, del: 0.65, drift: -48, color: '#c2410c' },
+  { offset:  42, size:  4, dur: 1.7, del: 0.40, drift:  44, color: '#c2410c' },
+  { offset:  -8, size:  7, dur: 2.0, del: 1.00, drift:  10, color: '#fbbf24' },
+  { offset:  12, size:  5, dur: 1.5, del: 0.55, drift: -15, color: '#fcd34d' },
+  { offset: -24, size:  6, dur: 1.8, del: 0.75, drift: -28, color: '#fdba74' },
+  { offset:  18, size:  7, dur: 1.9, del: 0.15, drift:  22, color: '#ffffff' },
+  { offset:   0, size:  6, dur: 1.6, del: 0.85, drift:  -5, color: '#fef08a' },
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function CRMWorkspace() {
   // --- AUTENTICACIÓN ---
   const [session, setSession] = useState<any>(null);
@@ -128,12 +207,6 @@ export default function CRMWorkspace() {
   // Modales
   const [showAddLeadModal, setShowAddLeadModal] = useState<boolean>(false);
   const [newLeadForm, setNewLeadForm] = useState({ name: "", phone: "", source: "Manual", stageId: "stage-1" });
-
-  // Envío masivo (campañas)
-  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
-  const [broadcastMessage, setBroadcastMessage] = useState<string>("");
-  const [broadcastStageId, setBroadcastStageId] = useState<string>("all");
-  const [broadcastProgress, setBroadcastProgress] = useState<{ status: string; sent: number; failed: number; total: number; current?: string } | null>(null);
   
   // Métricas (Fase 4)
   const [dashboardStats, setDashboardStats] = useState<any>({
@@ -148,6 +221,13 @@ export default function CRMWorkspace() {
   const [socketConnected, setSocketConnected] = useState<boolean>(false);
   const [loadingData, setLoadingData] = useState<boolean>(false);
   const [syncing, setSyncing] = useState<boolean>(false);
+  const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
+  const [broadcastSelected, setBroadcastSelected] = useState<string[]>([]);
+  const [broadcastMessage, setBroadcastMessage] = useState<string>('');
+  const [broadcastSending, setBroadcastSending] = useState<boolean>(false);
+  const [broadcastResults, setBroadcastResults] = useState<any[]>([]);
+  const [broadcastSearch, setBroadcastSearch] = useState<string>('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -300,14 +380,9 @@ export default function CRMWorkspace() {
     });
 
     socket.on('conversation:assigned', (data: { conversationId: string; assignedAgentId: string }) => {
-      setConversations(prev => prev.map(c =>
+      setConversations(prev => prev.map(c => 
         c.id === data.conversationId ? { ...c, assigned_agent_id: data.assignedAgentId } : c
       ));
-    });
-
-    // Progreso del envío masivo (campañas)
-    socket.on('broadcast:progress', (data: { status: string; sent: number; failed: number; total: number; current?: string }) => {
-      setBroadcastProgress(data);
     });
 
     return () => {
@@ -319,13 +394,14 @@ export default function CRMWorkspace() {
       socket.off('message:status_updated');
       socket.off('agent:typing_status');
       socket.off('conversation:assigned');
-      socket.off('broadcast:progress');
     };
   }, [selectedConvoId]);
 
   useEffect(() => {
     if (!selectedConvoId) return;
 
+    setMessages([]);
+    setLoadingMessages(true);
     socket.emit('conversation:join', selectedConvoId);
     fetchMessages(selectedConvoId);
 
@@ -336,7 +412,7 @@ export default function CRMWorkspace() {
   }, [selectedConvoId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, typingAgent]);
 
   useEffect(() => {
@@ -408,6 +484,33 @@ export default function CRMWorkspace() {
       }
     } catch (e) {
       console.error("Error cargando mensajes:", e);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  const handleBroadcast = async () => {
+    if (!broadcastSelected.length || !broadcastMessage.trim() || broadcastSending) return;
+    setBroadcastSending(true);
+    setBroadcastResults([]);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/messages/broadcast`, {
+        method: 'POST',
+        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadIds: broadcastSelected, content: broadcastMessage.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBroadcastResults([{ leadId: '', name: 'Error', phone: '', status: 'error', error: data.error }]);
+      } else {
+        setBroadcastResults(data.results || []);
+        setBroadcastSelected([]);
+        setBroadcastMessage('');
+      }
+    } catch (e) {
+      console.error('Error en broadcast:', e);
+    } finally {
+      setBroadcastSending(false);
     }
   };
 
@@ -584,50 +687,6 @@ export default function CRMWorkspace() {
     }
   };
 
-  // Envío masivo: calcula los destinatarios en el front (según la etapa elegida)
-  // y manda los leadIds al backend, que procesa con demoras anti-ban.
-  const handleSendBroadcast = async () => {
-    if (!broadcastMessage.trim()) return;
-
-    const targets = broadcastStageId === 'all'
-      ? leads
-      : leads.filter(l => l.stage_id === broadcastStageId);
-    const leadIds = targets.map(l => l.id);
-
-    if (leadIds.length === 0) {
-      alert('No hay leads en esa selección para enviar.');
-      return;
-    }
-
-    const confirmar = window.confirm(
-      `Vas a enviar este mensaje a ${leadIds.length} contacto(s), uno por uno con demoras. ` +
-      `⚠️ El envío masivo puede hacer que WhatsApp bloquee el número. ¿Continuar?`
-    );
-    if (!confirmar) return;
-
-    setBroadcastProgress({ status: 'running', sent: 0, failed: 0, total: leadIds.length });
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/broadcast`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ message: broadcastMessage, leadIds })
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(err.error || 'No se pudo iniciar el envío.');
-        setBroadcastProgress(null);
-        return;
-      }
-      // El progreso va llegando por Socket.io (broadcast:progress)
-    } catch (e) {
-      console.error('Error iniciando broadcast:', e);
-      alert('Error de conexión al iniciar el envío.');
-      setBroadcastProgress(null);
-    }
-  };
-
   const handleManualAssign = async (agentId: string | null) => {
     if (!selectedConvoId) return;
 
@@ -721,17 +780,6 @@ export default function CRMWorkspace() {
   const selectedLead = selectedLeadId ? getLeadById(selectedLeadId) : null;
   const currentConvo = conversations.find(c => c.id === selectedConvoId);
 
-  // Etapas REALES presentes en los leads cargados (id UUID + nombre), derivadas
-  // de la relación pipeline_stages que trae /api/leads. Se usa en el envío masivo
-  // para que "por etapa" filtre por el stage_id real y no por los ids ficticios de STAGES.
-  const availableStages = Array.from(
-    new Map(
-      leads
-        .filter(l => l.pipeline_stages)
-        .map(l => [l.pipeline_stages!.id, l.pipeline_stages!.name] as [string, string])
-    ).entries()
-  ).map(([id, name]) => ({ id, name }));
-
   // Tema visual según el usuario logueado:
   // owner (Alejo)  → San Lorenzo (rojo y azul)
   // agent (Nico)   → Ferro Carril Oeste (verde clarito)
@@ -750,9 +798,9 @@ export default function CRMWorkspace() {
   // Pantalla de carga Auth
   if (loadingAuth) {
     return (
-      <div className="flex h-screen w-screen bg-neutral-950 items-center justify-center text-neutral-100 gap-2">
-        <RefreshCw className="animate-spin text-orange-500" />
-        <span className="text-sm">Iniciando Automata CRM...</span>
+      <div className="flex h-screen w-screen bg-[#03030f] items-center justify-center gap-3">
+        <RefreshCw className="animate-spin text-orange-500" size={18} />
+        <span className="text-sm font-semibold uppercase tracking-widest text-neutral-500">Iniciando…</span>
       </div>
     );
   }
@@ -760,265 +808,302 @@ export default function CRMWorkspace() {
   // Login obligatorio: sin sesión real de Supabase no se accede a la app
   if (!session) {
     return (
-      <div className={`${loginThemeClass} flex h-screen w-screen bg-neutral-950 items-center justify-center overflow-hidden font-sans relative`}>
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/15 rounded-full blur-[140px] transition-colors duration-700" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[50%] bg-amber-500/10 rounded-full blur-[140px] transition-colors duration-700" />
+      <div className={`${loginThemeClass} relative flex h-screen w-screen items-center justify-center overflow-hidden bg-[#03030f] font-sans`}>
 
-        <div className="app-enter bg-neutral-900/40 border border-neutral-800/80 backdrop-blur-2xl p-8 rounded-3xl w-full max-w-md shadow-2xl relative z-10 mx-4">
-          <div className="flex flex-col items-center mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center font-bold text-white shadow-xl shadow-orange-500/25 mb-4">
-              A
+        {/* Estrellas parpadeantes */}
+        {STARS.map((s, i) => (
+          <div
+            key={i}
+            className="star pointer-events-none absolute rounded-full bg-white"
+            style={{
+              top: `${s.top}%`,
+              left: `${s.left}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              '--dur': `${s.dur}s`,
+              '--del': `${s.del}s`,
+            } as React.CSSProperties}
+          />
+        ))}
+
+        {/* Partículas de escape del cohete — suben desde el centro inferior */}
+        <div className="pointer-events-none absolute bottom-0 left-1/2">
+          {EXHAUST.map((p, i) => (
+            <div
+              key={i}
+              className="exhaust-particle"
+              style={{
+                width: `${p.size}px`,
+                height: `${p.size}px`,
+                left: `${p.offset}px`,
+                bottom: '0px',
+                backgroundColor: p.color,
+                '--dur': `${p.dur}s`,
+                '--del': `${p.del}s`,
+                '--drift': `${p.drift}px`,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+
+        {/* Resplandor en el suelo — luz cálida del escape */}
+        <div className="ground-glow pointer-events-none absolute bottom-0 left-1/2 h-56 w-[550px] -translate-x-1/2 rounded-full bg-orange-500/20 blur-[70px]" />
+
+        {/* Nebulosa sutil — esquina superior derecha */}
+        <div className="pointer-events-none absolute right-[-5%] top-[-10%] h-[40%] w-[28%] rounded-full bg-amber-500/10 blur-[130px]" />
+
+        {/* TARJETA DE LOGIN */}
+        <div className="app-enter relative z-10 mx-4 w-full max-w-sm">
+
+          {/* Marca — encima de la tarjeta */}
+          <div className="mb-8 flex flex-col items-center">
+            <div className="rocket-glow mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 shadow-2xl shadow-orange-500/40">
+              <Rocket size={28} className="text-white" />
             </div>
-            <h2 className="text-xl font-bold text-white tracking-wide">Automata CRM</h2>
-            <p className="text-xs text-neutral-400 mt-1">Acceso seguro para agentes de la agencia</p>
+            <h1 className="text-4xl font-black uppercase tracking-[0.18em] text-white">
+              AUTOMATA
+            </h1>
+            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.35em] text-neutral-500">
+              CRM · Workspace
+            </p>
           </div>
 
-          {authError && (
-            <div className="p-3 bg-rose-950/40 border border-rose-900/40 rounded-xl text-rose-400 text-xs flex items-center gap-2 mb-4">
-              <AlertCircle size={14} className="shrink-0" />
-              <span>{authError}</span>
-            </div>
-          )}
+          <div className="rounded-3xl border border-white/[0.06] bg-neutral-900/60 p-7 shadow-2xl shadow-black/60 backdrop-blur-2xl">
 
-          <form onSubmit={isSignUp ? handleRegister : handleLogin} className="space-y-4">
-            {isSignUp ? (
-              <>
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Nombre Completo</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: Alejo"
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
-                  </div>
-                </div>
+            {authError && (
+              <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-900/40 bg-rose-950/40 p-3 text-xs text-rose-400">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
 
-                <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={isSignUp ? handleRegister : handleLogin} className="space-y-4">
+              {isSignUp ? (
+                <>
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Rol</label>
-                    <select
-                      value={roleInput}
-                      onChange={(e) => setRoleInput(e.target.value as any)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-xl focus:outline-none focus:border-orange-600"
-                    >
-                      <option value="owner">Dueño (Owner)</option>
-                      <option value="agent">Colaborador (Agent)</option>
-                    </select>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Nombre Completo</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Alejo"
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Rol</label>
+                      <select
+                        value={roleInput}
+                        onChange={(e) => setRoleInput(e.target.value as any)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 focus:border-orange-600 focus:outline-none"
+                      >
+                        <option value="owner">Dueño (Owner)</option>
+                        <option value="agent">Colaborador (Agent)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Workspace</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Automata"
+                        value={workspaceNameInput}
+                        onChange={(e) => setWorkspaceNameInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 px-3 py-2 text-sm text-neutral-200 focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Workspace</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ej: Automata"
-                      value={workspaceNameInput}
-                      onChange={(e) => setWorkspaceNameInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-xl focus:outline-none focus:border-orange-600"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Email Corporativo</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="email"
-                      required
-                      placeholder="nombre@automata.com"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Contraseña</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/10 hover:shadow-orange-500/20 transition-all pt-2.5"
-                >
-                  Registrarse y Crear Cuenta
-                </button>
-              </>
-            ) : selectedAgent !== 'other' ? (
-              <>
-                <div className="text-center mb-2">
-                  <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider block mb-3">¿Quién ingresa hoy?</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  {/* Card Alejo */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAgent('alejo');
-                      setAuthError(null);
-                    }}
-                    className={`flex flex-col items-center p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${
-                      selectedAgent === 'alejo'
-                        ? 'bg-orange-950/20 border-orange-500/80 shadow-[0_0_20px_rgba(139,92,246,0.15)] scale-[1.02]'
-                        : 'bg-neutral-950/40 border-neutral-800/80 hover:border-neutral-700/80'
-                    }`}
-                  >
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg mb-3 transition-transform duration-300 group-hover:scale-105 ${
-                      selectedAgent === 'alejo'
-                        ? 'bg-gradient-to-tr from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20'
-                        : 'bg-neutral-800 text-neutral-400'
-                    }`}>
-                      A
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Email Corporativo</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="email"
+                        required
+                        placeholder="nombre@automata.com"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
                     </div>
-                    <span className="text-xs font-bold text-white">Alejo</span>
-                    <span className="text-[10px] text-orange-400 font-semibold mt-0.5">Dueño (Owner)</span>
-                  </button>
-
-                  {/* Card Nico */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAgent('nico');
-                      setAuthError(null);
-                    }}
-                    className={`flex flex-col items-center p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group ${
-                      selectedAgent === 'nico'
-                        ? 'bg-amber-950/20 border-amber-500/80 shadow-[0_0_20px_rgba(99,102,241,0.15)] scale-[1.02]'
-                        : 'bg-neutral-950/40 border-neutral-800/80 hover:border-neutral-700/80'
-                    }`}
-                  >
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg mb-3 transition-transform duration-300 group-hover:scale-105 ${
-                      selectedAgent === 'nico'
-                        ? 'bg-gradient-to-tr from-amber-600 to-amber-500 text-white shadow-lg shadow-amber-500/20'
-                        : 'bg-neutral-800 text-neutral-400'
-                    }`}>
-                      N
-                    </div>
-                    <span className="text-xs font-bold text-white">Nico</span>
-                    <span className="text-[10px] text-amber-400 font-semibold mt-0.5">Colaborador</span>
-                  </button>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Contraseña</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
                   </div>
-                </div>
 
-                <div className="space-y-2 pt-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/10 hover:shadow-orange-500/20 transition-all"
+                    className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:from-orange-400 hover:to-amber-400 hover:shadow-orange-500/30"
+                  >
+                    Registrarse y Crear Cuenta
+                  </button>
+                </>
+              ) : selectedAgent !== 'other' ? (
+                <>
+                  <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                    ¿Quién ingresa hoy?
+                  </p>
+
+                  <div className="mb-5 grid grid-cols-2 gap-3">
+                    {/* Card Alejo */}
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedAgent('alejo'); setAuthError(null); }}
+                      className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border p-4 transition-all duration-300 ${
+                        selectedAgent === 'alejo'
+                          ? 'scale-[1.03] border-orange-500/70 bg-orange-950/20 shadow-[0_0_28px_rgba(249,115,22,0.2)]'
+                          : 'border-neutral-800/80 bg-neutral-950/40 hover:border-neutral-700'
+                      }`}
+                    >
+                      <div className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full text-lg font-bold transition-transform duration-300 group-hover:scale-105 ${
+                        selectedAgent === 'alejo'
+                          ? 'bg-gradient-to-tr from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20'
+                          : 'bg-neutral-800 text-neutral-400'
+                      }`}>
+                        A
+                      </div>
+                      <span className="text-xs font-bold text-white">Alejo</span>
+                      <span className="mt-0.5 text-[10px] font-semibold text-orange-400">Owner</span>
+                    </button>
+
+                    {/* Card Nico */}
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedAgent('nico'); setAuthError(null); }}
+                      className={`group relative flex flex-col items-center overflow-hidden rounded-2xl border p-4 transition-all duration-300 ${
+                        selectedAgent === 'nico'
+                          ? 'scale-[1.03] border-amber-500/70 bg-amber-950/20 shadow-[0_0_28px_rgba(245,158,11,0.2)]'
+                          : 'border-neutral-800/80 bg-neutral-950/40 hover:border-neutral-700'
+                      }`}
+                    >
+                      <div className={`mb-3 flex h-14 w-14 items-center justify-center rounded-full text-lg font-bold transition-transform duration-300 group-hover:scale-105 ${
+                        selectedAgent === 'nico'
+                          ? 'bg-gradient-to-tr from-amber-600 to-amber-400 text-white shadow-lg shadow-amber-500/20'
+                          : 'bg-neutral-800 text-neutral-400'
+                      }`}>
+                        N
+                      </div>
+                      <span className="text-xs font-bold text-white">Nico</span>
+                      <span className="mt-0.5 text-[10px] font-semibold text-amber-400">Colaborador</span>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="mt-1 w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:from-orange-400 hover:to-amber-400 hover:shadow-orange-500/30"
                   >
                     Iniciar Sesión
                   </button>
-                </div>
 
-                <div className="text-center pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAgent('other');
-                      setAuthError(null);
-                    }}
-                    className="text-xs text-neutral-400 hover:text-neutral-200 underline font-medium"
-                  >
-                    Ingresar con otro correo
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Email Corporativo</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="email"
-                      required
-                      placeholder="nombre@automata.com"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
+                  <div className="pt-1 text-center">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedAgent('other'); setAuthError(null); }}
+                      className="text-xs font-medium text-neutral-600 underline hover:text-neutral-400 transition-colors"
+                    >
+                      Ingresar con otro correo
+                    </button>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Contraseña</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      value={passwordInput}
-                      onChange={(e) => setPasswordInput(e.target.value)}
-                      className="w-full bg-neutral-950/50 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
-                    />
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Email Corporativo</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="email"
+                        required
+                        placeholder="nombre@automata.com"
+                        value={emailInput}
+                        onChange={(e) => setEmailInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/10 hover:shadow-orange-500/20 transition-all"
-                >
-                  Iniciar Sesión
-                </button>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500">Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-2.5 text-neutral-500" size={16} />
+                      <input
+                        type="password"
+                        required
+                        placeholder="••••••••"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950/50 py-2 pl-10 pr-4 text-sm text-neutral-200 placeholder-neutral-600 transition-colors focus:border-orange-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
 
-                <div className="text-center pt-2">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedAgent('alejo');
-                      setAuthError(null);
-                    }}
-                    className="text-xs text-neutral-400 hover:text-neutral-200 underline font-medium"
+                    type="submit"
+                    className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-500/20 transition-all hover:from-orange-400 hover:to-amber-400 hover:shadow-orange-500/30"
                   >
-                    Volver al acceso rápido
+                    Iniciar Sesión
                   </button>
-                </div>
-              </>
-            )}
-          </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setAuthError(null);
-              }}
-              className="text-xs text-orange-400 hover:text-orange-300 font-semibold"
-            >
-              {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿Eres nuevo agente? Regístrate aquí"}
-            </button>
+                  <div className="pt-1 text-center">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedAgent('alejo'); setAuthError(null); }}
+                      className="text-xs font-medium text-neutral-600 underline hover:text-neutral-400 transition-colors"
+                    >
+                      Volver al acceso rápido
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+
+            <div className="mt-5 text-center">
+              <button
+                onClick={() => { setIsSignUp(!isSignUp); setAuthError(null); }}
+                className="text-xs font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+              >
+                {isSignUp ? '¿Ya tenés cuenta? Iniciá sesión' : '¿Sos nuevo agente? Registrate aquí'}
+              </button>
+            </div>
           </div>
+
+          <p className="mt-5 text-center text-[9px] uppercase tracking-[0.3em] text-neutral-700">
+            Acceso exclusivo · Equipo Automata
+          </p>
         </div>
       </div>
     );
@@ -1026,7 +1111,7 @@ export default function CRMWorkspace() {
 
   // PANEL PRINCIPAL
   return (
-    <div className={`${themeClass} app-enter flex h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden font-sans relative`}>
+    <div className={`${themeClass} app-enter flex h-full w-full bg-neutral-950 text-neutral-100 overflow-hidden font-sans relative`}>
       
       {/* Radial glows */}
       <div className="absolute top-[-15%] left-[-5%] w-[45%] h-[45%] bg-orange-600/15 rounded-full blur-[130px] pointer-events-none" />
@@ -1339,11 +1424,11 @@ export default function CRMWorkspace() {
             </aside>
 
             {/* Chat Central */}
-            <main className="flex-1 flex flex-col bg-neutral-950/10 backdrop-blur-sm relative z-10">
+            <main className="flex-1 flex flex-col bg-neutral-950 relative z-10">
               {currentConvo ? (
                 <>
                   {/* Chat Header */}
-                  <header className="h-16 px-4 border-b border-neutral-800/60 bg-neutral-900/20 backdrop-blur-md flex items-center justify-between">
+                  <header className="h-16 px-4 border-b border-neutral-700 bg-neutral-900 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700/50 flex items-center justify-center font-semibold text-neutral-300 relative text-sm select-none">
                         {currentConvo.leads?.name.charAt(0)}
@@ -1388,9 +1473,15 @@ export default function CRMWorkspace() {
                   </header>
 
                   {/* Chat Log */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar chat-grid-bg">
-                    {messages.length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-neutral-500">
+                  <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar chat-grid-bg">
+                    <div className="flex-1" />
+                    <div className="p-4 space-y-4">
+                    {loadingMessages ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-5 h-5 border-2 border-orange-600/30 border-t-orange-500 rounded-full animate-spin" />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <div className="flex items-center justify-center py-8 text-neutral-600 text-sm">
                         <span>No hay mensajes en esta conversación</span>
                       </div>
                     ) : (
@@ -1451,10 +1542,11 @@ export default function CRMWorkspace() {
                       </div>
                     )}
                     <div ref={messagesEndRef} />
+                    </div>
                   </div>
 
                   {/* Chat Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-800/60 bg-neutral-900/10 backdrop-blur-md flex items-center gap-3 relative">
+                  <form onSubmit={handleSendMessage} className="p-4 border-t border-neutral-800/60 bg-neutral-900/80 backdrop-blur-md flex items-center gap-3 relative">
                     <div className="relative shrink-0">
                       <button
                         type="button"
@@ -1556,13 +1648,11 @@ export default function CRMWorkspace() {
                 </div>
 
                 <button
-                  onClick={() => setShowBroadcastModal(true)}
-                  className="px-3 py-1.5 bg-neutral-800 border border-neutral-700/60 text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-700/60 hover:border-neutral-600 transition-all flex items-center gap-1.5"
-                  title="Enviar un mensaje a varios leads a la vez"
+                  onClick={() => { setShowBroadcastModal(true); setBroadcastSelected([]); setBroadcastMessage(''); setBroadcastResults([]); setBroadcastSearch(''); }}
+                  className="px-3 py-1.5 bg-neutral-800 border border-neutral-700 text-neutral-300 hover:text-white hover:border-orange-500/50 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
                 >
-                  <Send size={13} /> Envío masivo
+                  <Megaphone size={13} /> Mensaje masivo
                 </button>
-
                 <button
                   onClick={() => setShowAddLeadModal(true)}
                   className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-orange-500/15 hover:shadow-orange-500/25 transition-all flex items-center gap-1"
@@ -1943,117 +2033,6 @@ export default function CRMWorkspace() {
       )}
 
       {/* MODAL: AÑADIR LEAD */}
-      {/* MODAL: ENVÍO MASIVO (CAMPAÑA) */}
-      {showBroadcastModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="app-enter bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
-            <div className="flex justify-between items-center mb-4 pb-3 border-b border-neutral-800">
-              <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                <Send size={17} className="text-orange-400" /> Envío masivo
-              </h3>
-              <button
-                onClick={() => { setShowBroadcastModal(false); setBroadcastProgress(null); }}
-                className="text-neutral-400 hover:text-neutral-200 text-sm font-semibold bg-neutral-800 hover:bg-neutral-700 w-6 h-6 rounded-full flex items-center justify-center"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Aviso anti-ban */}
-            <div className="p-3 bg-amber-950/30 border border-amber-900/40 rounded-xl text-amber-300/90 text-[11px] flex items-start gap-2 mb-4">
-              <ShieldAlert size={15} className="shrink-0 mt-0.5" />
-              <span>
-                El envío masivo puede hacer que WhatsApp <strong>bloquee tu número</strong>.
-                Se manda de a uno con demoras (4–12s). Usá un número que no te duela perder y
-                evitá spamear. Máximo 200 por campaña.
-              </span>
-            </div>
-
-            {broadcastProgress ? (
-              // ── Vista de progreso ──
-              <div className="space-y-4 py-2">
-                <div className="text-center">
-                  <span className="text-3xl font-bold text-white font-mono">
-                    {broadcastProgress.sent + broadcastProgress.failed}
-                  </span>
-                  <span className="text-neutral-500"> / {broadcastProgress.total}</span>
-                </div>
-                <div className="h-3 w-full bg-neutral-950/60 rounded-full overflow-hidden border border-neutral-800">
-                  <div
-                    style={{ width: `${broadcastProgress.total > 0 ? ((broadcastProgress.sent + broadcastProgress.failed) / broadcastProgress.total) * 100 : 0}%` }}
-                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
-                  />
-                </div>
-                <div className="flex justify-center gap-6 text-xs">
-                  <span className="text-emerald-400 font-semibold">✓ {broadcastProgress.sent} enviados</span>
-                  {broadcastProgress.failed > 0 && (
-                    <span className="text-rose-400 font-semibold">✕ {broadcastProgress.failed} fallidos</span>
-                  )}
-                </div>
-                {broadcastProgress.status === 'done' ? (
-                  <div className="text-center pt-2">
-                    <p className="text-emerald-400 text-sm font-semibold mb-3">¡Campaña finalizada!</p>
-                    <button
-                      onClick={() => { setShowBroadcastModal(false); setBroadcastProgress(null); setBroadcastMessage(""); }}
-                      className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-xs font-semibold"
-                    >
-                      Cerrar
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-center text-[11px] text-neutral-500">
-                    Enviando{broadcastProgress.current ? ` a ${broadcastProgress.current}` : ''}… no cierres esta ventana.
-                  </p>
-                )}
-              </div>
-            ) : (
-              // ── Formulario de la campaña ──
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Destinatarios</label>
-                  <select
-                    value={broadcastStageId}
-                    onChange={(e) => setBroadcastStageId(e.target.value)}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600"
-                  >
-                    <option value="all">Todos los leads ({leads.length})</option>
-                    {availableStages.map(stage => {
-                      const count = leads.filter(l => l.stage_id === stage.id).length;
-                      return (
-                        <option key={stage.id} value={stage.id}>
-                          {stage.name} ({count})
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
-                    Mensaje <span className="text-neutral-600 normal-case font-normal">— usá <code className="text-orange-400">{'{nombre}'}</code> para personalizar</span>
-                  </label>
-                  <textarea
-                    rows={5}
-                    placeholder="Hola {nombre}! Te escribo de Automata para contarte…"
-                    value={broadcastMessage}
-                    onChange={(e) => setBroadcastMessage(e.target.value)}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-500 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600 transition-colors resize-none"
-                  />
-                </div>
-
-                <button
-                  onClick={handleSendBroadcast}
-                  disabled={!broadcastMessage.trim()}
-                  className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/15 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Send size={13} /> Enviar campaña
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {showAddLeadModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
@@ -2132,6 +2111,160 @@ export default function CRMWorkspace() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: MENSAJE MASIVO */}
+      {showBroadcastModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Megaphone size={16} className="text-orange-400" />
+                <h3 className="font-bold text-white">Mensaje masivo</h3>
+                <span className="text-[10px] px-2 py-0.5 bg-orange-950/40 border border-orange-800/40 text-orange-400 rounded-full font-semibold">
+                  Máx. 5
+                </span>
+              </div>
+              <button
+                onClick={() => !broadcastSending && setShowBroadcastModal(false)}
+                disabled={broadcastSending}
+                className="text-neutral-500 hover:text-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {/* Selección de leads */}
+              <div className="px-6 pt-4 pb-2">
+                <p className="text-xs text-neutral-500 mb-3">
+                  Seleccioná hasta 5 leads. Hay una pausa de 2–4 seg entre cada envío para no generar alertas.
+                </p>
+
+                {/* Búsqueda */}
+                <div className="relative mb-2">
+                  <Search size={12} className="absolute left-3 top-2.5 text-neutral-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar lead..."
+                    value={broadcastSearch}
+                    onChange={e => setBroadcastSearch(e.target.value)}
+                    className="w-full bg-neutral-950/60 border border-neutral-800 rounded-lg pl-8 pr-3 py-2 text-xs text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-orange-600 transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+                  {leads
+                    .filter(l =>
+                      l.name.toLowerCase().includes(broadcastSearch.toLowerCase()) ||
+                      l.phone.includes(broadcastSearch)
+                    )
+                    .map(lead => {
+                      const isSelected = broadcastSelected.includes(lead.id);
+                      const isDisabled = !isSelected && broadcastSelected.length >= 5;
+                      const stageName = lead.pipeline_stages?.name ?? null;
+                      return (
+                        <label
+                          key={lead.id}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
+                            isSelected
+                              ? 'bg-orange-950/30 border-orange-600/50 text-white'
+                              : isDisabled
+                              ? 'bg-neutral-900/30 border-neutral-800/30 text-neutral-600 cursor-not-allowed opacity-50'
+                              : 'bg-neutral-900/40 border-neutral-800 text-neutral-300 hover:border-orange-600/30 hover:text-white'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={() => {
+                              if (isSelected) {
+                                setBroadcastSelected(prev => prev.filter(id => id !== lead.id));
+                              } else if (!isDisabled) {
+                                setBroadcastSelected(prev => [...prev, lead.id]);
+                              }
+                            }}
+                            className="accent-orange-500 w-3.5 h-3.5 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-semibold block truncate">{lead.name}</span>
+                            <span className="text-[10px] text-neutral-500 font-mono">+{lead.phone}</span>
+                          </div>
+                          {stageName && (
+                            <span className="text-[9px] px-1.5 py-0.5 bg-neutral-800 border border-neutral-700 rounded text-neutral-400 shrink-0">
+                              {stageName}
+                            </span>
+                          )}
+                          {isSelected && <Check size={12} className="text-orange-400 shrink-0" />}
+                        </label>
+                      );
+                    })}
+                </div>
+                <p className="text-[10px] text-neutral-600 mt-2 text-right">
+                  {broadcastSelected.length}/5 seleccionados
+                </p>
+              </div>
+
+              {/* Compositor de mensaje */}
+              <div className="px-6 pb-4">
+                <label className="text-xs font-semibold text-neutral-400 block mb-2">Mensaje</label>
+                <textarea
+                  value={broadcastMessage}
+                  onChange={e => setBroadcastMessage(e.target.value)}
+                  placeholder="Escribí el mensaje que vas a enviar..."
+                  rows={4}
+                  className="w-full bg-neutral-950/60 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-orange-600 resize-none transition-colors"
+                />
+                <p className="text-[10px] text-neutral-600 mt-1 text-right">{broadcastMessage.length} caracteres</p>
+              </div>
+
+              {/* Resultados */}
+              {broadcastResults.length > 0 && (
+                <div className="px-6 pb-4 space-y-1.5">
+                  <p className="text-xs font-semibold text-neutral-400 mb-2">Resultados del envío</p>
+                  {broadcastResults.map((r, i) => (
+                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${r.status === 'sent' ? 'bg-green-950/30 border border-green-800/40 text-green-400' : 'bg-red-950/30 border border-red-800/40 text-red-400'}`}>
+                      {r.status === 'sent' ? <Check size={12} /> : <X size={12} />}
+                      <span className="font-semibold">{r.name}</span>
+                      <span className="text-neutral-500 font-mono">+{r.phone}</span>
+                      <span className="ml-auto">{r.status === 'sent' ? 'Enviado' : `Error: ${r.error}`}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-neutral-800 flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setShowBroadcastModal(false)}
+                disabled={broadcastSending}
+                className="flex-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed text-xs font-semibold text-neutral-300 transition-colors"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={handleBroadcast}
+                disabled={broadcastSelected.length === 0 || !broadcastMessage.trim() || broadcastSending}
+                className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-amber-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/15 hover:shadow-orange-500/25 transition-all flex items-center justify-center gap-2"
+              >
+                {broadcastSending ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Enviando... (~{broadcastSelected.length * 3}s)
+                  </>
+                ) : (
+                  <>
+                    <Send size={12} /> Enviar a {broadcastSelected.length || '—'}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

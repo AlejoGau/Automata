@@ -19,6 +19,9 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -167,4 +170,47 @@ body {
   .slide-in {
     animation: none;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LOGIN — FONDO ANIMADO (estrellas + escape de cohete)
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1;  transform: scale(0.7); }
+  50%       { opacity: 0.85; transform: scale(1.3); }
+}
+
+@keyframes riseUp {
+  0%   { transform: translateY(0)     translateX(0)              scale(1);   opacity: 0.9; }
+  70%  { opacity: 0.35; }
+  100% { transform: translateY(-200px) translateX(var(--drift, 0px)) scale(0.05); opacity: 0; }
+}
+
+@keyframes groundGlow {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
+@keyframes rocketGlow {
+  0%, 100% { box-shadow: 0 0 24px 6px rgba(251, 146, 60, 0.35); }
+  50%       { box-shadow: 0 0 52px 16px rgba(251, 146, 60, 0.65); }
+}
+
+.star {
+  animation: twinkle var(--dur, 3s) ease-in-out var(--del, 0s) infinite;
+}
+
+.exhaust-particle {
+  position: absolute;
+  border-radius: 9999px;
+  animation: riseUp var(--dur, 2s) ease-out var(--del, 0s) infinite;
+}
+
+.ground-glow {
+  animation: groundGlow 2.2s ease-in-out infinite;
+}
+
+.rocket-glow {
+  animation: rocketGlow 2.5s ease-in-out infinite;
 }
