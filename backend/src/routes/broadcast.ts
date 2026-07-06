@@ -157,9 +157,11 @@ export function setupBroadcastRouter(io: SocketServer) {
 
   router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
     const user = req.user!;
-    const { message, stageId, leadIds } = req.body;
+    // Acepta 'message' (nuestro frontend) o 'content' (frontend de Vercel).
+    const { message, content, stageId, leadIds } = req.body;
+    const text: unknown = message ?? content;
 
-    if (!message || typeof message !== 'string' || !message.trim()) {
+    if (!text || typeof text !== 'string' || !text.trim()) {
       res.status(400).json({ error: 'Falta el mensaje de la campaña' });
       return;
     }
@@ -209,7 +211,7 @@ export function setupBroadcastRouter(io: SocketServer) {
       // Responder ya y procesar en segundo plano
       res.status(202).json({ status: 'started', total: recipients.length });
 
-      runBroadcast(io, user.id, user.workspace_id, message, recipients)
+      runBroadcast(io, user.id, user.workspace_id, text, recipients)
         .catch((err) => {
           console.error('Error en la campaña de broadcast:', err);
           io.emit('broadcast:progress', { status: 'error', message: err?.message });

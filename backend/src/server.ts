@@ -75,6 +75,8 @@ app.use('/api/webhooks', setupWebhookRouter(io));
 app.use('/api/webhooks/cloud', setupWebhookCloudRouter(io));
 app.use('/api/messages', setupMessagesRouter(io));
 app.use('/api/broadcast', setupBroadcastRouter(io));
+// Alias para el frontend de Vercel (repo automata-crm), que pega a esta ruta.
+app.use('/api/messages/broadcast', setupBroadcastRouter(io));
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/dashboard', dashboardRouter);
