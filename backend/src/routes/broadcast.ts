@@ -28,6 +28,10 @@ const MIN_DELAY_MS = 4000;   // demora mínima entre mensajes
 const MAX_DELAY_MS = 12000;  // demora máxima entre mensajes
 const MAX_RECIPIENTS = 200;  // tope de destinatarios por campaña
 
+// Candado por workspace: evita que se lancen dos campañas a la vez
+// (doble-click o dos agentes), lo que duplicaría envíos y subiría el riesgo de ban.
+const activeBroadcasts = new Set<string>();
+
 interface Recipient {
   id: string;
   name: string | null;
@@ -160,6 +164,14 @@ export function setupBroadcastRouter(io: SocketServer) {
       return;
     }
 
+    // Candado: reservamos el workspace de forma síncrona (sin await en el medio)
+    // para que un doble-click no arranque dos campañas.
+    if (activeBroadcasts.has(user.workspace_id)) {
+      res.status(409).json({ error: 'Ya hay una campaña en curso. Esperá a que termine antes de lanzar otra.' });
+      return;
+    }
+    activeBroadcasts.add(user.workspace_id);
+
     try {
       // Construir la lista de destinatarios (siempre dentro del workspace)
       let query = supabase
@@ -181,11 +193,13 @@ export function setupBroadcastRouter(io: SocketServer) {
       );
 
       if (recipients.length === 0) {
+        activeBroadcasts.delete(user.workspace_id);
         res.status(400).json({ error: 'No hay destinatarios con teléfono válido' });
         return;
       }
 
       if (recipients.length > MAX_RECIPIENTS) {
+        activeBroadcasts.delete(user.workspace_id);
         res.status(400).json({
           error: `Demasiados destinatarios (${recipients.length}). El máximo por campaña es ${MAX_RECIPIENTS} para reducir el riesgo de ban.`,
         });
@@ -195,11 +209,16 @@ export function setupBroadcastRouter(io: SocketServer) {
       // Responder ya y procesar en segundo plano
       res.status(202).json({ status: 'started', total: recipients.length });
 
-      runBroadcast(io, user.id, user.workspace_id, message, recipients).catch((err) => {
-        console.error('Error en la campaña de broadcast:', err);
-        io.emit('broadcast:progress', { status: 'error', message: err?.message });
-      });
+      runBroadcast(io, user.id, user.workspace_id, message, recipients)
+        .catch((err) => {
+          console.error('Error en la campaña de broadcast:', err);
+          io.emit('broadcast:progress', { status: 'error', message: err?.message });
+        })
+        .finally(() => {
+          activeBroadcasts.delete(user.workspace_id);
+        });
     } catch (error: any) {
+      activeBroadcasts.delete(user.workspace_id);
       console.error('Error iniciando broadcast:', error);
       res.status(500).json({ error: 'Error iniciando el envío', details: error.message });
     }

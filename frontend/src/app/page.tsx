@@ -721,6 +721,17 @@ export default function CRMWorkspace() {
   const selectedLead = selectedLeadId ? getLeadById(selectedLeadId) : null;
   const currentConvo = conversations.find(c => c.id === selectedConvoId);
 
+  // Etapas REALES presentes en los leads cargados (id UUID + nombre), derivadas
+  // de la relación pipeline_stages que trae /api/leads. Se usa en el envío masivo
+  // para que "por etapa" filtre por el stage_id real y no por los ids ficticios de STAGES.
+  const availableStages = Array.from(
+    new Map(
+      leads
+        .filter(l => l.pipeline_stages)
+        .map(l => [l.pipeline_stages!.id, l.pipeline_stages!.name] as [string, string])
+    ).entries()
+  ).map(([id, name]) => ({ id, name }));
+
   // Tema visual según el usuario logueado:
   // owner (Alejo)  → San Lorenzo (rojo y azul)
   // agent (Nico)   → Ferro Carril Oeste (verde clarito)
@@ -2006,7 +2017,7 @@ export default function CRMWorkspace() {
                     className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600"
                   >
                     <option value="all">Todos los leads ({leads.length})</option>
-                    {STAGES.map(stage => {
+                    {availableStages.map(stage => {
                       const count = leads.filter(l => l.stage_id === stage.id).length;
                       return (
                         <option key={stage.id} value={stage.id}>
