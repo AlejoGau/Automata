@@ -128,6 +128,12 @@ export default function CRMWorkspace() {
   // Modales
   const [showAddLeadModal, setShowAddLeadModal] = useState<boolean>(false);
   const [newLeadForm, setNewLeadForm] = useState({ name: "", phone: "", source: "Manual", stageId: "stage-1" });
+
+  // Envío masivo (campañas)
+  const [showBroadcastModal, setShowBroadcastModal] = useState<boolean>(false);
+  const [broadcastMessage, setBroadcastMessage] = useState<string>("");
+  const [broadcastStageId, setBroadcastStageId] = useState<string>("all");
+  const [broadcastProgress, setBroadcastProgress] = useState<{ status: string; sent: number; failed: number; total: number; current?: string } | null>(null);
   
   // Métricas (Fase 4)
   const [dashboardStats, setDashboardStats] = useState<any>({
@@ -294,9 +300,14 @@ export default function CRMWorkspace() {
     });
 
     socket.on('conversation:assigned', (data: { conversationId: string; assignedAgentId: string }) => {
-      setConversations(prev => prev.map(c => 
+      setConversations(prev => prev.map(c =>
         c.id === data.conversationId ? { ...c, assigned_agent_id: data.assignedAgentId } : c
       ));
+    });
+
+    // Progreso del envío masivo (campañas)
+    socket.on('broadcast:progress', (data: { status: string; sent: number; failed: number; total: number; current?: string }) => {
+      setBroadcastProgress(data);
     });
 
     return () => {
@@ -308,6 +319,7 @@ export default function CRMWorkspace() {
       socket.off('message:status_updated');
       socket.off('agent:typing_status');
       socket.off('conversation:assigned');
+      socket.off('broadcast:progress');
     };
   }, [selectedConvoId]);
 
@@ -569,6 +581,50 @@ export default function CRMWorkspace() {
       setShowLeadDetails(false);
     } else {
       alert("No se encontró conversación activa para este lead.");
+    }
+  };
+
+  // Envío masivo: calcula los destinatarios en el front (según la etapa elegida)
+  // y manda los leadIds al backend, que procesa con demoras anti-ban.
+  const handleSendBroadcast = async () => {
+    if (!broadcastMessage.trim()) return;
+
+    const targets = broadcastStageId === 'all'
+      ? leads
+      : leads.filter(l => l.stage_id === broadcastStageId);
+    const leadIds = targets.map(l => l.id);
+
+    if (leadIds.length === 0) {
+      alert('No hay leads en esa selección para enviar.');
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `Vas a enviar este mensaje a ${leadIds.length} contacto(s), uno por uno con demoras. ` +
+      `⚠️ El envío masivo puede hacer que WhatsApp bloquee el número. ¿Continuar?`
+    );
+    if (!confirmar) return;
+
+    setBroadcastProgress({ status: 'running', sent: 0, failed: 0, total: leadIds.length });
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/broadcast`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ message: broadcastMessage, leadIds })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'No se pudo iniciar el envío.');
+        setBroadcastProgress(null);
+        return;
+      }
+      // El progreso va llegando por Socket.io (broadcast:progress)
+    } catch (e) {
+      console.error('Error iniciando broadcast:', e);
+      alert('Error de conexión al iniciar el envío.');
+      setBroadcastProgress(null);
     }
   };
 
@@ -1489,6 +1545,14 @@ export default function CRMWorkspace() {
                 </div>
 
                 <button
+                  onClick={() => setShowBroadcastModal(true)}
+                  className="px-3 py-1.5 bg-neutral-800 border border-neutral-700/60 text-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-700/60 hover:border-neutral-600 transition-all flex items-center gap-1.5"
+                  title="Enviar un mensaje a varios leads a la vez"
+                >
+                  <Send size={13} /> Envío masivo
+                </button>
+
+                <button
                   onClick={() => setShowAddLeadModal(true)}
                   className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-orange-500/15 hover:shadow-orange-500/25 transition-all flex items-center gap-1"
                 >
@@ -1868,6 +1932,117 @@ export default function CRMWorkspace() {
       )}
 
       {/* MODAL: AÑADIR LEAD */}
+      {/* MODAL: ENVÍO MASIVO (CAMPAÑA) */}
+      {showBroadcastModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="app-enter bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-neutral-800">
+              <h3 className="font-bold text-lg text-white flex items-center gap-2">
+                <Send size={17} className="text-orange-400" /> Envío masivo
+              </h3>
+              <button
+                onClick={() => { setShowBroadcastModal(false); setBroadcastProgress(null); }}
+                className="text-neutral-400 hover:text-neutral-200 text-sm font-semibold bg-neutral-800 hover:bg-neutral-700 w-6 h-6 rounded-full flex items-center justify-center"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Aviso anti-ban */}
+            <div className="p-3 bg-amber-950/30 border border-amber-900/40 rounded-xl text-amber-300/90 text-[11px] flex items-start gap-2 mb-4">
+              <ShieldAlert size={15} className="shrink-0 mt-0.5" />
+              <span>
+                El envío masivo puede hacer que WhatsApp <strong>bloquee tu número</strong>.
+                Se manda de a uno con demoras (4–12s). Usá un número que no te duela perder y
+                evitá spamear. Máximo 200 por campaña.
+              </span>
+            </div>
+
+            {broadcastProgress ? (
+              // ── Vista de progreso ──
+              <div className="space-y-4 py-2">
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-white font-mono">
+                    {broadcastProgress.sent + broadcastProgress.failed}
+                  </span>
+                  <span className="text-neutral-500"> / {broadcastProgress.total}</span>
+                </div>
+                <div className="h-3 w-full bg-neutral-950/60 rounded-full overflow-hidden border border-neutral-800">
+                  <div
+                    style={{ width: `${broadcastProgress.total > 0 ? ((broadcastProgress.sent + broadcastProgress.failed) / broadcastProgress.total) * 100 : 0}%` }}
+                    className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
+                  />
+                </div>
+                <div className="flex justify-center gap-6 text-xs">
+                  <span className="text-emerald-400 font-semibold">✓ {broadcastProgress.sent} enviados</span>
+                  {broadcastProgress.failed > 0 && (
+                    <span className="text-rose-400 font-semibold">✕ {broadcastProgress.failed} fallidos</span>
+                  )}
+                </div>
+                {broadcastProgress.status === 'done' ? (
+                  <div className="text-center pt-2">
+                    <p className="text-emerald-400 text-sm font-semibold mb-3">¡Campaña finalizada!</p>
+                    <button
+                      onClick={() => { setShowBroadcastModal(false); setBroadcastProgress(null); setBroadcastMessage(""); }}
+                      className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-lg text-xs font-semibold"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-center text-[11px] text-neutral-500">
+                    Enviando{broadcastProgress.current ? ` a ${broadcastProgress.current}` : ''}… no cierres esta ventana.
+                  </p>
+                )}
+              </div>
+            ) : (
+              // ── Formulario de la campaña ──
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Destinatarios</label>
+                  <select
+                    value={broadcastStageId}
+                    onChange={(e) => setBroadcastStageId(e.target.value)}
+                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600"
+                  >
+                    <option value="all">Todos los leads ({leads.length})</option>
+                    {STAGES.map(stage => {
+                      const count = leads.filter(l => l.stage_id === stage.id).length;
+                      return (
+                        <option key={stage.id} value={stage.id}>
+                          {stage.name} ({count})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+                    Mensaje <span className="text-neutral-600 normal-case font-normal">— usá <code className="text-orange-400">{'{nombre}'}</code> para personalizar</span>
+                  </label>
+                  <textarea
+                    rows={5}
+                    placeholder="Hola {nombre}! Te escribo de Automata para contarte…"
+                    value={broadcastMessage}
+                    onChange={(e) => setBroadcastMessage(e.target.value)}
+                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-500 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600 transition-colors resize-none"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSendBroadcast}
+                  disabled={!broadcastMessage.trim()}
+                  className="w-full py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-xs font-semibold shadow-md shadow-orange-500/15 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Send size={13} /> Enviar campaña
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {showAddLeadModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">

@@ -6,6 +6,7 @@ import { Server as SocketServer } from 'socket.io';
 import { setupWebhookRouter } from './routes/webhook.js';
 import { setupWebhookCloudRouter } from './routes/webhookCloud.js';
 import { setupMessagesRouter } from './routes/messages.js';
+import { setupBroadcastRouter } from './routes/broadcast.js';
 import conversationsRouter from './routes/conversations.js';
 import leadsRouter from './routes/leads.js';
 import dashboardRouter from './routes/dashboard.js';
@@ -73,6 +74,7 @@ io.on('connection', (socket) => {
 app.use('/api/webhooks', setupWebhookRouter(io));
 app.use('/api/webhooks/cloud', setupWebhookCloudRouter(io));
 app.use('/api/messages', setupMessagesRouter(io));
+app.use('/api/broadcast', setupBroadcastRouter(io));
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/dashboard', dashboardRouter);
