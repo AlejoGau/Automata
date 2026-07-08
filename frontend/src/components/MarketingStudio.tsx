@@ -407,12 +407,212 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
     }
   };
 
+  // --- OBTENER URL DE FONDO SEGÚN EL RUBRO (NICHO) ---
+  const getNicheBackgroundUrl = () => {
+    const industryText = (formData.industry || brandProfile.industry || "").toLowerCase();
+    if (industryText.includes('gim') || industryText.includes('gym') || industryText.includes('fitness') || industryText.includes('entren')) {
+      return "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1080&auto=format&fit=crop";
+    } else if (industryText.includes('pelu') || industryText.includes('barber') || industryText.includes('estet') || industryText.includes('salon')) {
+      return "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=1080&auto=format&fit=crop";
+    } else if (industryText.includes('inmo') || industryText.includes('propied') || industryText.includes('casa') || industryText.includes('real')) {
+      return "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1080&auto=format&fit=crop";
+    } else if (industryText.includes('taller') || industryText.includes('auto') || industryText.includes('mecan')) {
+      return "https://images.unsplash.com/photo-1486006920555-c77dce18193b?q=80&w=1080&auto=format&fit=crop";
+    }
+    // Genérico (Fondo abstracto)
+    return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080&auto=format&fit=crop";
+  };
+
+  // --- RENDERIZADO DE SLIDE A CANVAS (ASÍNCRONO CON CARGA DE IMAGEN DE FONDO) ---
+  const renderSlideToCanvas = (
+    slide: Slide,
+    index: number,
+    total: number,
+    width: number,
+    height: number
+  ): Promise<HTMLCanvasElement> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(canvas);
+        return;
+      }
+
+      // Colores desde la marca
+      const bg = brandProfile.background_color || '#121214';
+      const primary = brandProfile.primary_color || '#f97316';
+      const secondary = brandProfile.secondary_color || '#fbbf24';
+
+      // 1. Dibujar Color de Fondo base
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      // Obtener imagen del nicho
+      const imageUrl = getNicheBackgroundUrl();
+
+      const drawRemainingText = () => {
+        // 2. Gráficos decorativos de marca
+        ctx.fillStyle = primary;
+        ctx.beginPath();
+        // Esquina superior derecha
+        ctx.arc(width, 0, width * 0.32, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Círculo decorativo inferior izquierdo
+        ctx.fillStyle = `${secondary}15`; // con opacidad
+        ctx.beginPath();
+        ctx.arc(0, height, height * 0.33, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // 3. Dibujar Branding Superior proporcional
+        ctx.fillStyle = '#ffffff';
+        const logoFontSize = Math.max(16, Math.round(width * 0.033));
+        ctx.font = `bold ${logoFontSize}px sans-serif`;
+        ctx.fillText(brandProfile.business_name.toUpperCase() || 'MI NEGOCIO', width * 0.074, height * 0.09);
+
+        // Icono decorativo de marca (Isotipo simple)
+        ctx.fillStyle = primary;
+        const barWidth = width * 0.055;
+        const barHeight = Math.max(2, Math.round(height * 0.006));
+        ctx.fillRect(width * 0.074, height * 0.105, barWidth, barHeight);
+
+        // 4. Dibujar Layout de Texto Principal Proporcional
+        const layout = slide.layoutStyle || 'left';
+        ctx.fillStyle = '#ffffff';
+        
+        let titleY = height * 0.35;
+        const textMaxWidth = width * 0.82;
+        const leftMargin = width * 0.092;
+
+        // Tamaños de fuente relativos según el ancho del canvas
+        const baseTitleSize = Math.max(24, Math.round(width * 0.055));
+        const baseSubSize = Math.max(14, Math.round(width * 0.031));
+
+        if (layout === 'center') {
+          ctx.textAlign = 'center';
+          const fontSize = Math.round(baseTitleSize * 1.06);
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          titleY = height * 0.40;
+          
+          // Dibujar Título con wrapping
+          const nextY = wrapText(ctx, slide.title, width * 0.5, titleY, textMaxWidth, fontSize * 1.3);
+          
+          // Dibujar Subtítulo
+          ctx.fillStyle = '#a3a3a3';
+          const subFontSize = Math.round(baseSubSize * 1.06);
+          ctx.font = `${subFontSize}px sans-serif`;
+          wrapText(ctx, slide.subtitle, width * 0.5, nextY + (height * 0.022), textMaxWidth, subFontSize * 1.4);
+        } else if (layout === 'highlight' || slide.role === 'offer') {
+          ctx.textAlign = 'left';
+          const fontSize = Math.round(baseTitleSize * 1.13);
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          ctx.fillStyle = secondary;
+          
+          // Dibujar Título
+          const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, fontSize * 1.3);
+          
+          // Dibujar Subtítulo
+          ctx.fillStyle = '#ffffff';
+          const subFontSize = Math.round(baseSubSize * 1.11);
+          ctx.font = `normal ${subFontSize}px sans-serif`;
+          wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.03), textMaxWidth, subFontSize * 1.4);
+          
+          // Dibujar caja de oferta
+          ctx.fillStyle = `${primary}20`;
+          ctx.fillRect(width * 0.074, titleY - (height * 0.06), width * 0.85, Math.max(2, Math.round(height * 0.007)));
+        } else {
+          // Layout 'left'
+          ctx.textAlign = 'left';
+          ctx.font = `bold ${baseTitleSize}px sans-serif`;
+          
+          // Dibujar Título
+          const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, baseTitleSize * 1.3);
+          
+          // Dibujar Subtítulo
+          ctx.fillStyle = '#d4d4d4';
+          ctx.font = `${baseSubSize}px sans-serif`;
+          wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.022), textMaxWidth, baseSubSize * 1.4);
+        }
+
+        // 5. Dibujar Pie de Página (Footer) Proporcional
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#a3a3a3';
+        const footerFontSize = Math.max(12, Math.round(width * 0.026));
+        ctx.font = `${footerFontSize}px sans-serif`;
+
+        if (brandProfile.whatsapp) {
+          ctx.fillText(`💬 WhatsApp: +${brandProfile.whatsapp}`, leftMargin, height * 0.90);
+        }
+        if (brandProfile.website) {
+          ctx.fillText(`🌐 ${brandProfile.website}`, leftMargin, height * 0.935);
+        }
+
+        // Indicador de Paginación
+        ctx.textAlign = 'right';
+        ctx.fillStyle = primary;
+        const paginationFontSize = Math.max(14, Math.round(width * 0.033));
+        ctx.font = `bold ${paginationFontSize}px sans-serif`;
+        ctx.fillText(`${index + 1} / ${total}`, width * 0.91, height * 0.92);
+
+        // Deslizar para leer
+        const swipeFontSize = Math.max(10, Math.round(width * 0.022));
+        ctx.fillStyle = '#737373';
+        ctx.font = `bold ${swipeFontSize}px sans-serif`;
+        if (index < total - 1) {
+          ctx.fillText(`Deslizar ➔`, width * 0.91, height * 0.95);
+        }
+
+        resolve(canvas);
+      };
+
+      if (imageUrl) {
+        const img = new Image();
+        img.crossOrigin = "anonymous"; // Evitar Tainted Canvas con CORS
+        img.onload = () => {
+          // Ajustar la imagen cubriendo todo el canvas (aspect fill / cover)
+          const imgRatio = img.width / img.height;
+          const canvasRatio = width / height;
+          let drawWidth = width;
+          let drawHeight = height;
+          let offsetX = 0;
+          let offsetY = 0;
+
+          if (imgRatio > canvasRatio) {
+            drawWidth = height * imgRatio;
+            offsetX = (width - drawWidth) / 2;
+          } else {
+            drawHeight = width / imgRatio;
+            offsetY = (height - drawHeight) / 2;
+          }
+
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+          // Aplicar capa oscura semitransparente para legibilidad de textos
+          ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+          ctx.fillRect(0, 0, width, height);
+
+          drawRemainingText();
+        };
+        img.onerror = () => {
+          console.warn("Error cargando imagen de fondo para nicho. Usando color sólido.");
+          drawRemainingText();
+        };
+        img.src = imageUrl;
+      } else {
+        drawRemainingText();
+      }
+    });
+  };
+
   // --- EXPORTAR CARRUSEL O POST SIMPLE (CANVAS RENDER DINÁMICO) ---
-  const exportAllSlides = () => {
+  const exportAllSlides = async () => {
     if (!activeContent || (activeContent.content_type !== 'carrusel' && activeContent.content_type !== 'post_simple')) return;
     
     const slides = activeContent.slides_json;
-    alert(`Renderizando ${slides.length} imágenes. Tu navegador descargará los archivos PNG en unos segundos.`);
+    alert(`Renderizando ${slides.length} imágenes adaptadas al rubro. Tu navegador descargará los archivos PNG en unos segundos.`);
 
     // 1. Obtener dimensiones dinámicas según el formato de la publicación
     let width = 1080;
@@ -423,139 +623,17 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
       height = parseInt(parts[1]) || 1350;
     }
 
-    slides.forEach((slide: Slide, index: number) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Colores desde la marca
-      const bg = brandProfile.background_color || '#121214';
-      const primary = brandProfile.primary_color || '#f97316';
-      const secondary = brandProfile.secondary_color || '#fbbf24';
-
-      // 1. Dibujar Fondo
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-
-      // 2. Gráficos decorativos proporcionales
-      ctx.fillStyle = primary;
-      ctx.beginPath();
-      // Esquina superior derecha
-      ctx.arc(width, 0, width * 0.32, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Círculo decorativo inferior izquierdo
-      ctx.fillStyle = `${secondary}15`; // con opacidad
-      ctx.beginPath();
-      ctx.arc(0, height, height * 0.33, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // 3. Dibujar Branding Superior proporcional
-      ctx.fillStyle = '#ffffff';
-      const logoFontSize = Math.max(16, Math.round(width * 0.033));
-      ctx.font = `bold ${logoFontSize}px sans-serif`;
-      ctx.fillText(brandProfile.business_name.toUpperCase() || 'MI NEGOCIO', width * 0.074, height * 0.09);
-
-      // Icono decorativo de marca (Isotipo simple)
-      ctx.fillStyle = primary;
-      const barWidth = width * 0.055;
-      const barHeight = Math.max(2, Math.round(height * 0.006));
-      ctx.fillRect(width * 0.074, height * 0.105, barWidth, barHeight);
-
-      // 4. Dibujar Layout de Texto Principal Proporcional
-      const layout = slide.layoutStyle || 'left';
-      ctx.fillStyle = '#ffffff';
+    for (let index = 0; index < slides.length; index++) {
+      const slide = slides[index];
+      // Renderizado asíncrono con imagen cargada
+      const canvas = await renderSlideToCanvas(slide, index, slides.length, width, height);
       
-      let titleY = height * 0.35;
-      const textMaxWidth = width * 0.82;
-      const leftMargin = width * 0.092;
-
-      // Tamaños de fuente relativos según el ancho del canvas
-      const baseTitleSize = Math.max(24, Math.round(width * 0.055));
-      const baseSubSize = Math.max(14, Math.round(width * 0.031));
-
-      if (layout === 'center') {
-        ctx.textAlign = 'center';
-        const fontSize = Math.round(baseTitleSize * 1.06);
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        titleY = height * 0.40;
-        
-        // Dibujar Título con wrapping
-        const nextY = wrapText(ctx, slide.title, width * 0.5, titleY, textMaxWidth, fontSize * 1.3);
-        
-        // Dibujar Subtítulo
-        ctx.fillStyle = '#a3a3a3';
-        const subFontSize = Math.round(baseSubSize * 1.06);
-        ctx.font = `${subFontSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, width * 0.5, nextY + (height * 0.022), textMaxWidth, subFontSize * 1.4);
-      } else if (layout === 'highlight' || slide.role === 'offer') {
-        ctx.textAlign = 'left';
-        const fontSize = Math.round(baseTitleSize * 1.13);
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        ctx.fillStyle = secondary;
-        
-        // Dibujar Título
-        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, fontSize * 1.3);
-        
-        // Dibujar Subtítulo
-        ctx.fillStyle = '#ffffff';
-        const subFontSize = Math.round(baseSubSize * 1.11);
-        ctx.font = `normal ${subFontSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.03), textMaxWidth, subFontSize * 1.4);
-        
-        // Dibujar caja de oferta
-        ctx.fillStyle = `${primary}20`;
-        ctx.fillRect(width * 0.074, titleY - (height * 0.06), width * 0.85, Math.max(2, Math.round(height * 0.007)));
-      } else {
-        // Layout 'left'
-        ctx.textAlign = 'left';
-        ctx.font = `bold ${baseTitleSize}px sans-serif`;
-        
-        // Dibujar Título
-        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, baseTitleSize * 1.3);
-        
-        // Dibujar Subtítulo
-        ctx.fillStyle = '#d4d4d4';
-        ctx.font = `${baseSubSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.022), textMaxWidth, baseSubSize * 1.4);
-      }
-
-      // 5. Dibujar Pie de Página (Footer) Proporcional
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#a3a3a3';
-      const footerFontSize = Math.max(12, Math.round(width * 0.026));
-      ctx.font = `${footerFontSize}px sans-serif`;
-
-      if (brandProfile.whatsapp) {
-        ctx.fillText(`💬 WhatsApp: +${brandProfile.whatsapp}`, leftMargin, height * 0.90);
-      }
-      if (brandProfile.website) {
-        ctx.fillText(`🌐 ${brandProfile.website}`, leftMargin, height * 0.935);
-      }
-
-      // Indicador de Paginación (Slide 1 / X)
-      ctx.textAlign = 'right';
-      ctx.fillStyle = primary;
-      const paginationFontSize = Math.max(14, Math.round(width * 0.033));
-      ctx.font = `bold ${paginationFontSize}px sans-serif`;
-      ctx.fillText(`${index + 1} / ${slides.length}`, width * 0.91, height * 0.92);
-
-      // Deslizar para leer
-      const swipeFontSize = Math.max(10, Math.round(width * 0.022));
-      ctx.fillStyle = '#737373';
-      ctx.font = `bold ${swipeFontSize}px sans-serif`;
-      if (index < slides.length - 1) {
-        ctx.fillText(`Deslizar ➔`, width * 0.91, height * 0.95);
-      }
-
-      // 6. Descargar Archivo
+      // Descargar Archivo
       const link = document.createElement('a');
       link.download = `${activeContent.title.replace(/\s+/g, '_')}_slide_${index + 1}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
-    });
+    }
   };
 
   // Helper para wrapping en Canvas
@@ -613,117 +691,8 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         return;
       }
 
-      // 3. Crear canvas temporal
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        alert("Error de render de canvas.");
-        setLoadingVision(false);
-        return;
-      }
-
-      // Colores desde la marca
-      const bg = brandProfile.background_color || '#121214';
-      const primary = brandProfile.primary_color || '#f97316';
-      const secondary = brandProfile.secondary_color || '#fbbf24';
-
-      // Dibujar Fondo
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-
-      // Gráficos decorativos
-      ctx.fillStyle = primary;
-      ctx.beginPath();
-      ctx.arc(width, 0, width * 0.32, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.fillStyle = `${secondary}15`;
-      ctx.beginPath();
-      ctx.arc(0, height, height * 0.33, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Branding Superior
-      ctx.fillStyle = '#ffffff';
-      const logoFontSize = Math.max(16, Math.round(width * 0.033));
-      ctx.font = `bold ${logoFontSize}px sans-serif`;
-      ctx.fillText(brandProfile.business_name.toUpperCase() || 'MI NEGOCIO', width * 0.074, height * 0.09);
-
-      // Isotipo
-      ctx.fillStyle = primary;
-      const barWidth = width * 0.055;
-      const barHeight = Math.max(2, Math.round(height * 0.006));
-      ctx.fillRect(width * 0.074, height * 0.105, barWidth, barHeight);
-
-      // Layout de Texto Principal
-      const layout = slide.layoutStyle || 'left';
-      ctx.fillStyle = '#ffffff';
-      
-      let titleY = height * 0.35;
-      const textMaxWidth = width * 0.82;
-      const leftMargin = width * 0.092;
-
-      const baseTitleSize = Math.max(24, Math.round(width * 0.055));
-      const baseSubSize = Math.max(14, Math.round(width * 0.031));
-
-      if (layout === 'center') {
-        ctx.textAlign = 'center';
-        const fontSize = Math.round(baseTitleSize * 1.06);
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        titleY = height * 0.40;
-        
-        const nextY = wrapText(ctx, slide.title, width * 0.5, titleY, textMaxWidth, fontSize * 1.3);
-        
-        ctx.fillStyle = '#a3a3a3';
-        const subFontSize = Math.round(baseSubSize * 1.06);
-        ctx.font = `${subFontSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, width * 0.5, nextY + (height * 0.022), textMaxWidth, subFontSize * 1.4);
-      } else if (layout === 'highlight' || slide.role === 'offer') {
-        ctx.textAlign = 'left';
-        const fontSize = Math.round(baseTitleSize * 1.13);
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        ctx.fillStyle = secondary;
-        
-        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, fontSize * 1.3);
-        
-        ctx.fillStyle = '#ffffff';
-        const subFontSize = Math.round(baseSubSize * 1.11);
-        ctx.font = `normal ${subFontSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.03), textMaxWidth, subFontSize * 1.4);
-        
-        ctx.fillStyle = `${primary}20`;
-        ctx.fillRect(width * 0.074, titleY - (height * 0.06), width * 0.85, Math.max(2, Math.round(height * 0.007)));
-      } else {
-        ctx.textAlign = 'left';
-        ctx.font = `bold ${baseTitleSize}px sans-serif`;
-        
-        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, baseTitleSize * 1.3);
-        
-        ctx.fillStyle = '#d4d4d4';
-        ctx.font = `${baseSubSize}px sans-serif`;
-        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.022), textMaxWidth, baseSubSize * 1.4);
-      }
-
-      // Pie de Página (Footer)
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#a3a3a3';
-      const footerFontSize = Math.max(12, Math.round(width * 0.026));
-      ctx.font = `${footerFontSize}px sans-serif`;
-
-      if (brandProfile.whatsapp) {
-        ctx.fillText(`💬 WhatsApp: +${brandProfile.whatsapp}`, leftMargin, height * 0.90);
-      }
-      if (brandProfile.website) {
-        ctx.fillText(`🌐 ${brandProfile.website}`, leftMargin, height * 0.935);
-      }
-
-      // Indicador de Paginación
-      ctx.textAlign = 'right';
-      ctx.fillStyle = primary;
-      const paginationFontSize = Math.max(14, Math.round(width * 0.033));
-      ctx.font = `bold ${paginationFontSize}px sans-serif`;
-      ctx.fillText(`${activeSlideIndex + 1} / ${activeContent.slides_json.length}`, width * 0.91, height * 0.92);
+      // 3. Crear canvas asíncrono con la imagen de nicho correspondiente
+      const canvas = await renderSlideToCanvas(slide, activeSlideIndex, activeContent.slides_json.length, width, height);
 
       // 4. Convertir a base64
       const base64Data = canvas.toDataURL('image/png');
@@ -1261,9 +1230,9 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
 
                         {/* Slide Render Container */}
                         <div 
-                          className="flex-1 relative flex flex-col p-6 justify-between select-none transition-all duration-300"
+                          className="flex-1 relative flex flex-col p-6 justify-between select-none transition-all duration-300 bg-cover bg-center"
                           style={{ 
-                            backgroundColor: brandProfile.background_color || '#121214',
+                            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url(${getNicheBackgroundUrl()})`,
                             fontFamily: brandProfile.font_family || 'sans-serif'
                           }}
                         >
