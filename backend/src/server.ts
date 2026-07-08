@@ -10,6 +10,7 @@ import { setupBroadcastRouter } from './routes/broadcast.js';
 import conversationsRouter from './routes/conversations.js';
 import leadsRouter from './routes/leads.js';
 import dashboardRouter from './routes/dashboard.js';
+import marketingRouter from './routes/marketing.js';
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ app.use('/api/messages/broadcast', setupBroadcastRouter(io));
 app.use('/api/conversations', conversationsRouter);
 app.use('/api/leads', leadsRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/marketing', marketingRouter);
 
 // Health check
 app.get('/health', (req, res) => {

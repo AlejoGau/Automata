@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { socket } from "@/lib/socket";
 import { supabase } from "@/lib/supabase";
+import MarketingStudio from "@/components/MarketingStudio";
 
 // Interfaces de datos
 interface PipelineStage {
@@ -46,7 +47,7 @@ interface Message {
 }
 
 
-type TabType = 'chats' | 'leads' | 'dashboard' | 'settings';
+type TabType = 'chats' | 'leads' | 'dashboard' | 'marketing' | 'settings';
 type SearchType = 'contacts' | 'messages';
 
 const STAGES = [
@@ -1202,6 +1203,21 @@ export default function CRMWorkspace() {
               </span>
             </button>
 
+            {/* Marketing Studio */}
+            <button
+              onClick={() => setActiveTab('marketing')}
+              className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center relative group ${
+                activeTab === 'marketing'
+                  ? 'bg-orange-600 text-white shadow-md shadow-orange-500/20 scale-110'
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/40 hover:scale-105'
+              }`}
+            >
+              <Megaphone size={20} />
+              <span className="absolute left-16 bg-neutral-900 border border-neutral-800 text-neutral-200 text-xs py-1 px-2 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 font-medium whitespace-nowrap z-50">
+                Marketing Studio
+              </span>
+            </button>
+
             {/* Configuración */}
             <button
               onClick={() => setActiveTab('settings')}
@@ -1952,6 +1968,15 @@ export default function CRMWorkspace() {
               </div>
             )}
           </main>
+        )}
+
+        {/* VISTA 4: MARKETING STUDIO */}
+        {activeTab === 'marketing' && (
+          <MarketingStudio
+            session={session}
+            BACKEND_URL={BACKEND_URL}
+            getHeaders={getHeaders}
+          />
         )}
 
         {/* VISTA 4: CONFIGURACIÓN */}
