@@ -97,6 +97,13 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
   const [activeContent, setActiveContent] = useState<MarketingContent | null>(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState<number>(0);
   const [generating, setGenerating] = useState<boolean>(false);
+  const [loadingVision, setLoadingVision] = useState<boolean>(false);
+  const [visionAnalysis, setVisionAnalysis] = useState<string>("");
+
+  // Limpiar análisis al cambiar de slide
+  useEffect(() => {
+    setVisionAnalysis("");
+  }, [activeSlideIndex]);
 
   // Cargar datos al iniciar
   useEffect(() => {
@@ -580,6 +587,206 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
     ctx.fillText(line, x, currentY);
     return currentY;
   }
+
+  // --- ANALIZAR DISEÑO CON IA (VISION DE CHATGPT) ---
+  const analyzeCurrentSlide = async () => {
+    if (!activeContent || (activeContent.content_type !== 'carrusel' && activeContent.content_type !== 'post_simple')) return;
+    
+    setLoadingVision(true);
+    setVisionAnalysis("");
+
+    try {
+      // 1. Obtener dimensiones dinámicas
+      let width = 1080;
+      let height = 1350;
+      if (activeContent.format && activeContent.format.includes('x')) {
+        const parts = activeContent.format.split('x');
+        width = parseInt(parts[0]) || 1080;
+        height = parseInt(parts[1]) || 1350;
+      }
+
+      // 2. Obtener el slide activo
+      const slide = activeContent.slides_json[activeSlideIndex];
+      if (!slide) {
+        alert("No se pudo obtener el slide actual.");
+        setLoadingVision(false);
+        return;
+      }
+
+      // 3. Crear canvas temporal
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        alert("Error de render de canvas.");
+        setLoadingVision(false);
+        return;
+      }
+
+      // Colores desde la marca
+      const bg = brandProfile.background_color || '#121214';
+      const primary = brandProfile.primary_color || '#f97316';
+      const secondary = brandProfile.secondary_color || '#fbbf24';
+
+      // Dibujar Fondo
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+
+      // Gráficos decorativos
+      ctx.fillStyle = primary;
+      ctx.beginPath();
+      ctx.arc(width, 0, width * 0.32, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = `${secondary}15`;
+      ctx.beginPath();
+      ctx.arc(0, height, height * 0.33, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Branding Superior
+      ctx.fillStyle = '#ffffff';
+      const logoFontSize = Math.max(16, Math.round(width * 0.033));
+      ctx.font = `bold ${logoFontSize}px sans-serif`;
+      ctx.fillText(brandProfile.business_name.toUpperCase() || 'MI NEGOCIO', width * 0.074, height * 0.09);
+
+      // Isotipo
+      ctx.fillStyle = primary;
+      const barWidth = width * 0.055;
+      const barHeight = Math.max(2, Math.round(height * 0.006));
+      ctx.fillRect(width * 0.074, height * 0.105, barWidth, barHeight);
+
+      // Layout de Texto Principal
+      const layout = slide.layoutStyle || 'left';
+      ctx.fillStyle = '#ffffff';
+      
+      let titleY = height * 0.35;
+      const textMaxWidth = width * 0.82;
+      const leftMargin = width * 0.092;
+
+      const baseTitleSize = Math.max(24, Math.round(width * 0.055));
+      const baseSubSize = Math.max(14, Math.round(width * 0.031));
+
+      if (layout === 'center') {
+        ctx.textAlign = 'center';
+        const fontSize = Math.round(baseTitleSize * 1.06);
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        titleY = height * 0.40;
+        
+        const nextY = wrapText(ctx, slide.title, width * 0.5, titleY, textMaxWidth, fontSize * 1.3);
+        
+        ctx.fillStyle = '#a3a3a3';
+        const subFontSize = Math.round(baseSubSize * 1.06);
+        ctx.font = `${subFontSize}px sans-serif`;
+        wrapText(ctx, slide.subtitle, width * 0.5, nextY + (height * 0.022), textMaxWidth, subFontSize * 1.4);
+      } else if (layout === 'highlight' || slide.role === 'offer') {
+        ctx.textAlign = 'left';
+        const fontSize = Math.round(baseTitleSize * 1.13);
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.fillStyle = secondary;
+        
+        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, fontSize * 1.3);
+        
+        ctx.fillStyle = '#ffffff';
+        const subFontSize = Math.round(baseSubSize * 1.11);
+        ctx.font = `normal ${subFontSize}px sans-serif`;
+        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.03), textMaxWidth, subFontSize * 1.4);
+        
+        ctx.fillStyle = `${primary}20`;
+        ctx.fillRect(width * 0.074, titleY - (height * 0.06), width * 0.85, Math.max(2, Math.round(height * 0.007)));
+      } else {
+        ctx.textAlign = 'left';
+        ctx.font = `bold ${baseTitleSize}px sans-serif`;
+        
+        const nextY = wrapText(ctx, slide.title, leftMargin, titleY, textMaxWidth, baseTitleSize * 1.3);
+        
+        ctx.fillStyle = '#d4d4d4';
+        ctx.font = `${baseSubSize}px sans-serif`;
+        wrapText(ctx, slide.subtitle, leftMargin, nextY + (height * 0.022), textMaxWidth, baseSubSize * 1.4);
+      }
+
+      // Pie de Página (Footer)
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#a3a3a3';
+      const footerFontSize = Math.max(12, Math.round(width * 0.026));
+      ctx.font = `${footerFontSize}px sans-serif`;
+
+      if (brandProfile.whatsapp) {
+        ctx.fillText(`💬 WhatsApp: +${brandProfile.whatsapp}`, leftMargin, height * 0.90);
+      }
+      if (brandProfile.website) {
+        ctx.fillText(`🌐 ${brandProfile.website}`, leftMargin, height * 0.935);
+      }
+
+      // Indicador de Paginación
+      ctx.textAlign = 'right';
+      ctx.fillStyle = primary;
+      const paginationFontSize = Math.max(14, Math.round(width * 0.033));
+      ctx.font = `bold ${paginationFontSize}px sans-serif`;
+      ctx.fillText(`${activeSlideIndex + 1} / ${activeContent.slides_json.length}`, width * 0.91, height * 0.92);
+
+      // 4. Convertir a base64
+      const base64Data = canvas.toDataURL('image/png');
+
+      // 5. Enviar al backend
+      const res = await fetch(`${BACKEND_URL}/api/marketing/analyze-image`, {
+        method: 'POST',
+        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData: base64Data,
+          contentType: activeContent.content_type,
+          slideIndex: activeSlideIndex
+        })
+      });
+
+      const resJson = await res.json();
+      if (res.ok && resJson.success) {
+        setVisionAnalysis(resJson.critique);
+      } else {
+        alert(resJson.error || "No se pudo completar la auditoría con visión.");
+      }
+    } catch (err: any) {
+      console.error("Error al auditar imagen:", err);
+      alert("Error de red al intentar analizar el post.");
+    } finally {
+      setLoadingVision(false);
+    }
+  };
+
+  const formatMarkdownText = (text: string) => {
+    return text.split('\n').map((line, idx) => {
+      let content = line.trim();
+      
+      if (content.startsWith('###') || content.startsWith('##') || content.startsWith('#')) {
+        const cleanTitle = content.replace(/^#+\s+/, '');
+        return <h6 key={idx} className="font-bold text-neutral-100 text-xs mt-3 mb-1 first:mt-0">{cleanTitle}</h6>;
+      }
+      
+      const isBullet = content.startsWith('*') || content.startsWith('-') || content.startsWith('•');
+      if (isBullet) {
+        content = content.replace(/^[\*\-•]\s+/, '');
+      }
+
+      const parts = content.split('**');
+      const formattedParts = parts.map((part, pIdx) => {
+        if (pIdx % 2 === 1) {
+          return <strong key={pIdx} className="font-semibold text-orange-400">{part}</strong>;
+        }
+        return part;
+      });
+
+      if (isBullet) {
+        return (
+          <div key={idx} className="flex gap-1.5 ml-2 mt-1">
+            <span className="text-orange-500">•</span>
+            <span>{formattedParts}</span>
+          </div>
+        );
+      }
+
+      return line.trim() === '' ? <div key={idx} className="h-1.5" /> : <p key={idx} className="mt-1">{formattedParts}</p>;
+    });
+  };
 
   // --- RENDER COMPONENT ---
   return (
@@ -1140,6 +1347,43 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
                         )}
 
                       </div>
+
+                      {/* Botón ChatGPT Vision para analizar */}
+                      {(activeContent.content_type === 'carrusel' || activeContent.content_type === 'post_simple') && (
+                        <div className="w-[300px] space-y-3 pt-4 border-t border-neutral-900">
+                          <button
+                            type="button"
+                            onClick={analyzeCurrentSlide}
+                            disabled={loadingVision}
+                            className="w-full py-2.5 rounded-xl bg-orange-600/10 hover:bg-orange-600/20 border border-orange-500/30 text-xs font-semibold text-orange-400 hover:text-orange-300 flex items-center justify-center gap-2 shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {loadingVision ? (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                <span>Analizando diseño...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={13} />
+                                <span>Auditar Post con GPT Vision</span>
+                              </>
+                            )}
+                          </button>
+
+                          {visionAnalysis && (
+                            <div className="bg-neutral-950/60 border border-neutral-900 rounded-xl p-4 text-[11px] leading-relaxed max-h-[300px] overflow-y-auto custom-scrollbar space-y-2 select-text text-left">
+                              <h5 className="font-bold text-neutral-200 border-b border-neutral-800 pb-1.5 flex items-center gap-1.5">
+                                <Sparkles size={12} className="text-orange-500" />
+                                Auditoría de ChatGPT Vision (Slide {activeSlideIndex + 1})
+                              </h5>
+                              <div className="text-neutral-300">
+                                {formatMarkdownText(visionAnalysis)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                     </div>
 
                   </div>

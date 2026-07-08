@@ -542,4 +542,82 @@ function generateFallbackLocal(
   }
 }
 
+// 8. AUDITORÍA DE DISEÑO CON IA (VISION DE CHATGPT)
+router.post('/analyze-image', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { imageData, contentType, slideIndex = 0 } = req.body;
+
+  if (!imageData) {
+    res.status(400).json({ error: 'La imagen en base64 (imageData) es requerida' });
+    return;
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    res.status(400).json({ 
+      error: 'OpenAI API Key no configurada en el servidor. Configure la variable OPENAI_API_KEY en su archivo .env' 
+    });
+    return;
+  }
+
+  try {
+    console.log(`Utilizando ChatGPT Vision para analizar slide ${slideIndex + 1}...`);
+    
+    let base64Image = imageData;
+    if (!base64Image.startsWith('data:')) {
+      base64Image = `data:image/png;base64,${base64Image}`;
+    }
+
+    const prompt = `Sos un experto en marketing digital, copywriting y diseño gráfico publicitario para redes sociales.
+Analizá críticamente esta imagen de publicación (slide ${slideIndex + 1} de un contenido de tipo ${contentType}) diseñada para un negocio local.
+
+Por favor evaluá detalladamente y brindá feedback accionable:
+1. **Gancho e Impacto Comercial (Copywriting):** ¿El título es persuasivo? ¿Despierta curiosidad o deseo?
+2. **Diseño Visual y Legibilidad:** ¿Tiene buen contraste? ¿El texto es legible a simple vista desde un móvil? ¿La jerarquía visual es clara?
+3. **Llamado a la Acción (CTA):** Si corresponde, ¿el cierre es directo y le indica claramente al usuario qué hacer?
+
+Devolvé tu análisis formateado en Markdown de forma limpia y profesional, usando emojis. Sé directo y constructivo, enfocándote en consejos que eleven la conversión. Evitá introducciones vacías, empezá directo con los títulos.`;
+
+    const url = 'https://api.openai.com/v1/chat/completions';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: base64Image
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 800
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error al llamar a OpenAI API:', errorText);
+      res.status(500).json({ error: 'La API de OpenAI respondió con un error', details: errorText });
+      return;
+    }
+
+    const data: any = await response.json();
+    const critique = data.choices?.[0]?.message?.content || 'No se pudo obtener el análisis.';
+    
+    res.status(200).json({ success: true, critique });
+  } catch (err: any) {
+    console.error('Error en analyze-image:', err);
+    res.status(500).json({ error: 'Error interno en el servidor al analizar la imagen', details: err.message });
+  }
+});
+
 export default router;
