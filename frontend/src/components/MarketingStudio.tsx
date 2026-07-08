@@ -31,6 +31,9 @@ interface Slide {
   voiceOver?: string;
   visualSuggestion?: string;
   layoutStyle?: 'center' | 'left' | 'accent' | 'highlight';
+  eyebrow?: string;
+  badge?: string;
+  colorAccent?: string;
 }
 
 interface MarketingContent {
@@ -170,6 +173,12 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
   const subtitleText = isCarrusel ? currentSlide?.subtitle : currentSlide?.voiceOver;
   const isHighlight = currentSlide?.layoutStyle === 'highlight' || currentSlide?.role === 'offer';
 
+  const getTitleColor = () => {
+    if (currentSlide?.colorAccent === 'primary') return brandProfile.primary_color || '#f97316';
+    if (currentSlide?.colorAccent === 'secondary' || isHighlight) return brandProfile.secondary_color || '#fbbf24';
+    return '#ffffff';
+  };
+
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="w-[340px] h-[600px] rounded-[44px] border-4 border-neutral-800 bg-[#0a0a0b] shadow-2xl shadow-black/60 relative flex flex-col overflow-hidden">
@@ -197,44 +206,87 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
         {/* Slide content area */}
         {activeContent ? (
           <div
-            className="flex-1 relative flex flex-col p-5 justify-between select-none bg-cover bg-center"
+            className="flex-1 relative flex flex-col p-6 justify-between select-none bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(rgba(0,0,0,0.65),rgba(0,0,0,0.65)), url(${nicheBackgroundUrl})`,
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url(${nicheBackgroundUrl})`,
               fontFamily: brandProfile.font_family || 'sans-serif',
             }}
           >
-            {/* Brand stripe */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-1 h-7 rounded-full" style={{ backgroundColor: brandProfile.primary_color || '#f97316' }} />
-              <span className="text-[10px] font-black uppercase text-white tracking-widest">
-                {brandProfile.business_name || 'MI NEGOCIO'}
-              </span>
+            {/* Brand stripe (premium border) */}
+            <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: brandProfile.primary_color || '#f97316' }} />
+
+            {/* Top brand header */}
+            <div className="flex items-center justify-between w-full shrink-0">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1 h-5 rounded-full" style={{ backgroundColor: brandProfile.primary_color || '#f97316' }} />
+                <span className="text-[9px] font-black uppercase text-white tracking-widest">
+                  {brandProfile.business_name || 'MI NEGOCIO'}
+                </span>
+              </div>
+              {slideCount > 1 && (
+                <span className="text-[9px] px-2 py-0.5 rounded-full bg-white/10 text-white font-bold">
+                  {activeSlideIndex + 1} / {slideCount}
+                </span>
+              )}
             </div>
 
             {/* Text block */}
-            <div className={`space-y-2 my-auto ${currentSlide?.layoutStyle === 'center' ? 'text-center' : 'text-left'}`}>
+            <div className={`my-auto ${currentSlide?.layoutStyle === 'center' ? 'text-center' : 'text-left'}`}>
+              {/* Badge if present */}
+              {currentSlide?.badge && (
+                <div className={`mb-2.5 flex ${currentSlide.layoutStyle === 'center' ? 'justify-center' : 'justify-start'}`}>
+                  <span className="px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 to-amber-500 shadow-md">
+                    {currentSlide.badge}
+                  </span>
+                </div>
+              )}
+
+              {/* Eyebrow label */}
+              {currentSlide?.eyebrow && (
+                <span 
+                  className="text-[9px] font-black tracking-widest uppercase block mb-1.5 opacity-90"
+                  style={{ color: brandProfile.primary_color || '#f97316' }}
+                >
+                  {currentSlide.eyebrow}
+                </span>
+              )}
+
+              {/* Slide Title */}
               <h2
-                className="text-xl font-black leading-tight drop-shadow"
-                style={{ color: isHighlight ? (brandProfile.secondary_color || '#fbbf24') : '#ffffff' }}
+                className="text-xl font-black leading-snug drop-shadow-md"
+                style={{ color: getTitleColor() }}
               >
                 {titleText}
               </h2>
-              <p className="text-[11px] leading-relaxed text-neutral-300">{subtitleText}</p>
+
+              {/* Small accent divider */}
+              <div 
+                className={`h-0.5 w-10 my-2.5 rounded-full ${currentSlide?.layoutStyle === 'center' ? 'mx-auto' : ''}`}
+                style={{ backgroundColor: brandProfile.primary_color || '#f97316' }} 
+              />
+
+              {/* Subtitle / Description */}
+              <p className="text-[11px] leading-relaxed text-neutral-300 font-medium">
+                {subtitleText}
+              </p>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-between items-end border-t border-white/10 pt-3 shrink-0">
-              <div className="text-[8px] text-neutral-400 space-y-0.5">
-                {brandProfile.whatsapp && <p>💬 +{brandProfile.whatsapp}</p>}
-                {brandProfile.website && <p>🌐 {brandProfile.website}</p>}
+            {/* Footer with glassmorphism */}
+            <div className="bg-black/50 backdrop-blur-md rounded-xl p-3 border border-white/5 flex justify-between items-center mt-auto w-full shrink-0">
+              <div className="text-[8px] text-neutral-300 space-y-0.5">
+                {brandProfile.whatsapp && <p className="flex items-center gap-1 font-semibold">💬 +{brandProfile.whatsapp}</p>}
+                {brandProfile.website && <p className="flex items-center gap-1 opacity-90">🌐 {brandProfile.website}</p>}
               </div>
               {slideCount > 1 && (
-                <div className="flex gap-1">
+                <div className="flex gap-1 items-center">
                   {activeContent.slides_json.map((_: any, i: number) => (
                     <span
                       key={i}
                       className="w-1.5 h-1.5 rounded-full transition-all"
-                      style={{ backgroundColor: activeSlideIndex === i ? (brandProfile.primary_color || '#f97316') : '#444' }}
+                      style={{ 
+                        backgroundColor: activeSlideIndex === i ? (brandProfile.primary_color || '#f97316') : '#ffffff30',
+                        transform: activeSlideIndex === i ? 'scale(1.2)' : 'scale(1)'
+                      }}
                     />
                   ))}
                 </div>
@@ -603,6 +655,26 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
     setActiveContent({ ...activeContent, slides_json: updatedSlides });
   };
 
+  // Helper function to draw rounded rectangles on Canvas
+  const drawRoundRect = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) => {
+    if (w < 2 * r) r = w / 2;
+    if (h < 2 * r) r = h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  };
+
   // ─── Canvas Render ───────────────────────────────────────────────────────
   const renderSlideToCanvas = (
     slide: Slide, index: number, total: number, width: number, height: number
@@ -623,84 +695,175 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
       ctx.fillRect(0, 0, width, height);
 
       const drawContent = () => {
-        // Decorative circles
+        // 1. Premium vertical brand stripe (on the left edge)
         ctx.fillStyle = primary;
+        ctx.fillRect(0, 0, width * 0.015, height);
+
+        // 2. Decorative overlay circles (elegant background geometry)
+        ctx.fillStyle = `${primary}20`;
         ctx.beginPath();
-        ctx.arc(width, 0, width * 0.32, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = `${secondary}15`;
-        ctx.beginPath();
-        ctx.arc(0, height, height * 0.33, 0, 2 * Math.PI);
+        ctx.arc(width, 0, width * 0.35, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Brand name
+        ctx.fillStyle = `${secondary}10`;
+        ctx.beginPath();
+        ctx.arc(0, height, height * 0.38, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // 3. Header: Brand Logo & Title + Progress Pill
         const logoFontSize = Math.max(16, Math.round(width * 0.033));
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${logoFontSize}px sans-serif`;
-        ctx.fillText((brandProfile.business_name || 'MI NEGOCIO').toUpperCase(), leftMargin, height * 0.09);
+        ctx.textAlign = 'left';
+        ctx.fillText((brandProfile.business_name || 'MI NEGOCIO').toUpperCase(), leftMargin, height * 0.08);
+
+        // Small indicator stripe under brand name
         ctx.fillStyle = primary;
-        ctx.fillRect(leftMargin, height * 0.105, width * 0.055, Math.max(2, Math.round(height * 0.006)));
+        ctx.fillRect(leftMargin, height * 0.095, width * 0.06, Math.max(2, Math.round(height * 0.005)));
 
-        // Text content
-        const layout = slide.layoutStyle || 'left';
-        const baseTitleSize = Math.max(24, Math.round(width * 0.055));
-        const baseSubSize = Math.max(14, Math.round(width * 0.031));
-        let titleY = height * 0.35;
-        ctx.fillStyle = '#ffffff';
+        // Carousel Page indicator pill in header
+        if (total > 1) {
+          const pillText = `${index + 1} / ${total}`;
+          const pillFontSize = Math.max(11, Math.round(width * 0.024));
+          ctx.font = `bold ${pillFontSize}px sans-serif`;
+          const textWidth = ctx.measureText(pillText).width;
+          const pillW = textWidth + 24;
+          const pillH = pillFontSize + 12;
+          const pillX = width * 0.91 - pillW;
+          const pillY = height * 0.065;
 
-        if (layout === 'center') {
-          ctx.textAlign = 'center';
-          const fontSize = Math.round(baseTitleSize * 1.06);
-          ctx.font = `bold ${fontSize}px sans-serif`;
-          titleY = height * 0.40;
-          const nextY = wrapText(ctx, slide.title || '', width * 0.5, titleY, textMaxWidth, fontSize * 1.3);
-          ctx.fillStyle = '#a3a3a3';
-          const subFontSize = Math.round(baseSubSize * 1.06);
-          ctx.font = `${subFontSize}px sans-serif`;
-          wrapText(ctx, slide.subtitle || '', width * 0.5, nextY + height * 0.022, textMaxWidth, subFontSize * 1.4);
-        } else if (layout === 'highlight' || slide.role === 'offer') {
-          ctx.textAlign = 'left';
-          const fontSize = Math.round(baseTitleSize * 1.13);
-          ctx.font = `bold ${fontSize}px sans-serif`;
-          ctx.fillStyle = secondary;
-          const nextY = wrapText(ctx, slide.title || '', leftMargin, titleY, textMaxWidth, fontSize * 1.3);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+          drawRoundRect(ctx, pillX, pillY, pillW, pillH, pillH / 2);
+          ctx.fill();
+
           ctx.fillStyle = '#ffffff';
-          const subFontSize = Math.round(baseSubSize * 1.11);
-          ctx.font = `normal ${subFontSize}px sans-serif`;
-          wrapText(ctx, slide.subtitle || '', leftMargin, nextY + height * 0.03, textMaxWidth, subFontSize * 1.4);
-          ctx.fillStyle = `${primary}20`;
-          ctx.fillRect(leftMargin, titleY - height * 0.06, width * 0.85, Math.max(2, Math.round(height * 0.007)));
-        } else {
-          ctx.textAlign = 'left';
-          ctx.font = `bold ${baseTitleSize}px sans-serif`;
-          const nextY = wrapText(ctx, slide.title || '', leftMargin, titleY, textMaxWidth, baseTitleSize * 1.3);
-          ctx.fillStyle = '#d4d4d4';
-          ctx.font = `${baseSubSize}px sans-serif`;
-          wrapText(ctx, slide.subtitle || '', leftMargin, nextY + height * 0.022, textMaxWidth, baseSubSize * 1.4);
+          ctx.textAlign = 'center';
+          ctx.fillText(pillText, pillX + pillW / 2, pillY + pillH / 2 + pillFontSize * 0.35);
         }
 
-        // Footer
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#a3a3a3';
-        const footerFontSize = Math.max(12, Math.round(width * 0.026));
-        ctx.font = `${footerFontSize}px sans-serif`;
-        if (brandProfile.whatsapp) ctx.fillText(`💬 WhatsApp: +${brandProfile.whatsapp}`, leftMargin, height * 0.90);
-        if (brandProfile.website) ctx.fillText(`🌐 ${brandProfile.website}`, leftMargin, height * 0.935);
+        // 4. Content Block Layout
+        const layout = slide.layoutStyle || 'left';
+        const isCenter = layout === 'center';
+        const isHighlight = layout === 'highlight' || slide.role === 'offer';
+        const baseTitleSize = Math.max(22, Math.round(width * 0.052));
+        const baseSubSize = Math.max(13, Math.round(width * 0.028));
+        
+        let contentY = height * 0.32;
+        ctx.textAlign = isCenter ? 'center' : 'left';
+        const drawX = isCenter ? width / 2 : leftMargin;
 
-        ctx.textAlign = 'right';
+        // Badge rendering (e.g. "⚡ SOLO HOY")
+        if (slide.badge) {
+          const badgeText = slide.badge.toUpperCase();
+          const badgeFontSize = Math.max(10, Math.round(width * 0.022));
+          ctx.font = `black ${badgeFontSize}px sans-serif`;
+          const bTextWidth = ctx.measureText(badgeText).width;
+          const badgeW = bTextWidth + 18;
+          const badgeH = badgeFontSize + 10;
+          const badgeX = isCenter ? (width / 2 - badgeW / 2) : leftMargin;
+          
+          // Badge background (gradient look)
+          const grad = ctx.createLinearGradient(badgeX, contentY, badgeX + badgeW, contentY);
+          grad.addColorStop(0, '#fbbf24');
+          grad.addColorStop(1, '#f59e0b');
+          ctx.fillStyle = grad;
+          drawRoundRect(ctx, badgeX, contentY, badgeW, badgeH, 6);
+          ctx.fill();
+
+          // Badge text
+          ctx.fillStyle = '#000000';
+          ctx.textAlign = 'center';
+          ctx.fillText(badgeText, badgeX + badgeW / 2, contentY + badgeH / 2 + badgeFontSize * 0.35);
+
+          // Reset align
+          ctx.textAlign = isCenter ? 'center' : 'left';
+          contentY += badgeH + 20;
+        }
+
+        // Eyebrow label rendering
+        if (slide.eyebrow) {
+          const eyebrowText = slide.eyebrow.toUpperCase();
+          const eyebrowFontSize = Math.max(11, Math.round(width * 0.025));
+          ctx.font = `black ${eyebrowFontSize}px sans-serif`;
+          ctx.fillStyle = primary;
+          // Add letter spacing manually for premium look
+          const spacedText = eyebrowText.split('').join(' ');
+          ctx.fillText(spacedText, drawX, contentY);
+          contentY += eyebrowFontSize + 14;
+        }
+
+        // Title text color mapping
+        let titleColor = '#ffffff';
+        if (slide.colorAccent === 'primary') {
+          titleColor = primary;
+        } else if (slide.colorAccent === 'secondary' || isHighlight) {
+          titleColor = secondary;
+        }
+
+        // Draw Title
+        const titleFontSize = isHighlight ? Math.round(baseTitleSize * 1.1) : baseTitleSize;
+        ctx.font = `bold ${titleFontSize}px sans-serif`;
+        ctx.fillStyle = titleColor;
+        const afterTitleY = wrapText(ctx, slide.title || '', drawX, contentY, textMaxWidth, titleFontSize * 1.35);
+
+        // Decorative horizontal rule line
+        const ruleW = width * 0.09;
+        const ruleH = Math.max(2, Math.round(height * 0.005));
+        const ruleX = isCenter ? (width / 2 - ruleW / 2) : leftMargin;
         ctx.fillStyle = primary;
-        ctx.font = `bold ${Math.max(14, Math.round(width * 0.033))}px sans-serif`;
-        ctx.fillText(`${index + 1} / ${total}`, width * 0.91, height * 0.92);
+        ctx.fillRect(ruleX, afterTitleY + 14, ruleW, ruleH);
+
+        // Draw Subtitle / Description
+        const descFontSize = baseSubSize;
+        ctx.font = `normal ${descFontSize}px sans-serif`;
+        ctx.fillStyle = '#d4d4d4';
+        wrapText(ctx, slide.subtitle || '', drawX, afterTitleY + 14 + ruleH + 22, textMaxWidth, descFontSize * 1.45);
+
+        // 5. Glassmorphic Contact Card Footer Box
+        const footerY = height * 0.86;
+        const footerW = width * 0.88;
+        const footerH = height * 0.09;
+        const footerX = (width - footerW) / 2;
+
+        // Draw glass card background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        drawRoundRect(ctx, footerX, footerY, footerW, footerH, 14);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Footer text info
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#ffffff';
+        const contactFontSize = Math.max(10, Math.round(width * 0.024));
+        ctx.font = `semibold ${contactFontSize}px sans-serif`;
+
+        let contactX = footerX + 20;
+        const contactTextY = footerY + footerH / 2 + contactFontSize * 0.35;
+
+        if (brandProfile.whatsapp) {
+          ctx.fillText(`💬 +${brandProfile.whatsapp}`, contactX, contactTextY);
+          contactX += ctx.measureText(`💬 +${brandProfile.whatsapp}`).width + 30;
+        }
+
+        if (brandProfile.website) {
+          ctx.fillStyle = '#a3a3a3';
+          ctx.fillText(`🌐 ${brandProfile.website}`, contactX, contactTextY);
+        }
+
+        // Swipe guide text on right side of footer
         if (index < total - 1) {
-          ctx.fillStyle = '#737373';
-          ctx.font = `bold ${Math.max(10, Math.round(width * 0.022))}px sans-serif`;
-          ctx.fillText('Deslizar ➔', width * 0.91, height * 0.95);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = primary;
+          const guideFontSize = Math.max(10, Math.round(width * 0.022));
+          ctx.font = `bold ${guideFontSize}px sans-serif`;
+          ctx.fillText('Deslizar ➔', footerX + footerW - 20, contactTextY);
         }
 
         resolve(canvas);
       };
 
-      // Fix 2: use the memoized nicheBackgroundUrl consistently
       const img = document.createElement('img') as HTMLImageElement;
       img.crossOrigin = "anonymous";
       img.onload = () => {
@@ -715,7 +878,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         drawContent();
       };
       img.onerror = drawContent;
-      img.src = nicheBackgroundUrl; // use memoized value
+      img.src = nicheBackgroundUrl;
     });
   };
 
