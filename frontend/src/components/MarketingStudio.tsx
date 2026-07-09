@@ -34,6 +34,8 @@ interface Slide {
   eyebrow?: string;
   badge?: string;
   colorAccent?: string;
+  photoKeywords?: string;
+  photoUrl?: string;
 }
 
 interface MarketingContent {
@@ -155,6 +157,30 @@ const QUICK_TEMPLATES = [
   },
 ];
 
+// Fallback composition per slide role, used when the AI didn't set an explicit layoutStyle —
+// keeps a 5-slide carousel from reading as the same template repeated five times.
+const ROLE_LAYOUT_DEFAULTS: Record<string, 'center' | 'left' | 'accent' | 'highlight'> = {
+  cta: 'center',
+};
+function resolveLayout(slide?: Slide | null): 'center' | 'left' | 'accent' | 'highlight' {
+  return slide?.layoutStyle || ROLE_LAYOUT_DEFAULTS[slide?.role || ''] || 'left';
+}
+
+// Small role → icon glyph map so every slide/scene gets a quick visual cue instead of
+// being pure text. Reel scenes use 'solution' instead of 'benefit' for the same beat.
+const ROLE_ICON: Record<string, string> = {
+  hook: '✨',
+  problem: '⚠️',
+  solution: '✅',
+  benefit: '✅',
+  offer: '🔥',
+  cta: '📲',
+  generic: '💡',
+};
+function resolveIcon(slide?: Slide | null): string {
+  return ROLE_ICON[slide?.role || ''] || ROLE_ICON.generic;
+}
+
 // ─── PhoneMockup — defined OUTSIDE the parent to avoid re-creation ────────────
 interface PhoneMockupProps {
   brandProfile: BrandProfile;
@@ -171,7 +197,11 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
 
   const titleText = isCarrusel ? currentSlide?.title : currentSlide?.textOnScreen;
   const subtitleText = isCarrusel ? currentSlide?.subtitle : currentSlide?.voiceOver;
-  const isHighlight = currentSlide?.layoutStyle === 'highlight' || currentSlide?.role === 'offer';
+  const layout = resolveLayout(currentSlide);
+  const isHighlight = layout === 'highlight' || currentSlide?.role === 'offer';
+  // Per-slide photo (from Pexels, keyed off that slide's own content) beats the one fixed
+  // stock photo reused for every slide in the industry.
+  const slideBackgroundUrl = currentSlide?.photoUrl || nicheBackgroundUrl;
 
   const getTitleColor = () => {
     if (currentSlide?.colorAccent === 'primary') return brandProfile.primary_color || '#f97316';
@@ -208,8 +238,10 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
           <div
             className="flex-1 relative flex flex-col p-6 justify-between select-none bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)), url(${nicheBackgroundUrl})`,
-              fontFamily: brandProfile.font_family || 'sans-serif',
+              // Vignette instead of a flat scrim — keeps the header/footer legible without
+              // fully blacking out the niche photo in the middle of the frame.
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 25%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.7) 100%), url(${slideBackgroundUrl})`,
+              fontFamily: "'Inter', sans-serif",
             }}
           >
             {/* Brand stripe (premium border) */}
@@ -231,11 +263,27 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
             </div>
 
             {/* Text block */}
-            <div className={`my-auto ${currentSlide?.layoutStyle === 'center' ? 'text-center' : 'text-left'}`}>
+            <div className={`my-auto ${layout === 'center' ? 'text-center' : 'text-left'}`}>
+              {/* Role icon chip — quick visual cue per slide (hook/problem/benefit/offer/cta) */}
+              <div className={`mb-2 flex ${layout === 'center' ? 'justify-center' : 'justify-start'}`}>
+                <span
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-sm border"
+                  style={{
+                    backgroundColor: `${brandProfile.primary_color || '#f97316'}26`,
+                    borderColor: `${brandProfile.primary_color || '#f97316'}55`,
+                  }}
+                >
+                  {resolveIcon(currentSlide)}
+                </span>
+              </div>
+
               {/* Badge if present */}
               {currentSlide?.badge && (
-                <div className={`mb-2.5 flex ${currentSlide.layoutStyle === 'center' ? 'justify-center' : 'justify-start'}`}>
-                  <span className="px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 to-amber-500 shadow-md">
+                <div className={`mb-2.5 flex ${layout === 'center' ? 'justify-center' : 'justify-start'}`}>
+                  <span
+                    className="px-2.5 py-0.5 rounded-full text-[8px] uppercase tracking-wider text-black bg-gradient-to-r from-amber-400 to-amber-500 shadow-md"
+                    style={{ fontFamily: "'Anton', sans-serif", fontWeight: 400 }}
+                  >
                     {currentSlide.badge}
                   </span>
                 </div>
@@ -243,8 +291,8 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
 
               {/* Eyebrow label */}
               {currentSlide?.eyebrow && (
-                <span 
-                  className="text-[9px] font-black tracking-widest uppercase block mb-1.5 opacity-90"
+                <span
+                  className="text-[9px] font-bold tracking-widest uppercase block mb-1.5 opacity-90"
                   style={{ color: brandProfile.primary_color || '#f97316' }}
                 >
                   {currentSlide.eyebrow}
@@ -253,16 +301,16 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
 
               {/* Slide Title */}
               <h2
-                className="text-xl font-black leading-snug drop-shadow-md"
-                style={{ color: getTitleColor() }}
+                className="text-2xl leading-tight drop-shadow-md"
+                style={{ color: getTitleColor(), fontFamily: "'Anton', sans-serif", fontWeight: 400 }}
               >
                 {titleText}
               </h2>
 
               {/* Small accent divider */}
-              <div 
-                className={`h-0.5 w-10 my-2.5 rounded-full ${currentSlide?.layoutStyle === 'center' ? 'mx-auto' : ''}`}
-                style={{ backgroundColor: brandProfile.primary_color || '#f97316' }} 
+              <div
+                className={`h-0.5 w-10 my-2.5 rounded-full ${layout === 'center' ? 'mx-auto' : ''}`}
+                style={{ backgroundColor: brandProfile.primary_color || '#f97316' }}
               />
 
               {/* Subtitle / Description */}
@@ -396,6 +444,18 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
   useEffect(() => {
     fetchBrandProfile();
     fetchSavedContents();
+  }, []);
+
+  // Load the display fonts used for post rendering (preview + canvas export) once per page.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const id = 'ms-post-fonts';
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap';
+    document.head.appendChild(link);
   }, []);
 
   // Fix 4: only populate form on the FIRST brand load, not on every brand edit
@@ -609,6 +669,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
           title: json.data.title || "Post Simple",
           subtitle: json.data.visualSuggestion || "Diseño corporativo",
           layoutStyle: 'center',
+          photoUrl: json.data.photoUrl,
         }];
 
         // Auto-assign layouts for carousel slides
@@ -676,9 +737,23 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
   };
 
   // ─── Canvas Render ───────────────────────────────────────────────────────
-  const renderSlideToCanvas = (
+  const renderSlideToCanvas = async (
     slide: Slide, index: number, total: number, width: number, height: number
   ): Promise<HTMLCanvasElement> => {
+    // Warm up the webfonts before measuring/drawing — otherwise the canvas silently falls
+    // back to the platform default the first time it's used, and wrapping widths would be
+    // measured against a different font than what actually gets painted.
+    if (typeof document !== 'undefined' && (document as any).fonts?.load) {
+      try {
+        await Promise.all([
+          document.fonts.load(`400 32px 'Anton'`),
+          document.fonts.load(`400 16px 'Inter'`),
+          document.fonts.load(`600 16px 'Inter'`),
+          document.fonts.load(`700 16px 'Inter'`),
+        ]);
+      } catch { /* falls back to sans-serif if the webfont never loads */ }
+    }
+
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       canvas.width = width;
@@ -690,6 +765,8 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
       const secondary = brandProfile.secondary_color || '#fbbf24';
       const leftMargin = width * 0.092;
       const textMaxWidth = width * 0.82;
+      const HEAD = "'Anton', sans-serif"; // punchy display face — titles & badges only, it's a single (already-bold) weight
+      const BODY = "'Inter', sans-serif";
 
       ctx.fillStyle = brandProfile.background_color || '#121214';
       ctx.fillRect(0, 0, width, height);
@@ -700,12 +777,12 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         ctx.fillRect(0, 0, width * 0.015, height);
 
         // 2. Decorative overlay circles (elegant background geometry)
-        ctx.fillStyle = `${primary}20`;
+        ctx.fillStyle = `${primary}33`;
         ctx.beginPath();
         ctx.arc(width, 0, width * 0.35, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.fillStyle = `${secondary}10`;
+        ctx.fillStyle = `${secondary}26`;
         ctx.beginPath();
         ctx.arc(0, height, height * 0.38, 0, 2 * Math.PI);
         ctx.fill();
@@ -713,7 +790,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         // 3. Header: Brand Logo & Title + Progress Pill
         const logoFontSize = Math.max(16, Math.round(width * 0.033));
         ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${logoFontSize}px sans-serif`;
+        ctx.font = `700 ${logoFontSize}px ${BODY}`;
         ctx.textAlign = 'left';
         ctx.fillText((brandProfile.business_name || 'MI NEGOCIO').toUpperCase(), leftMargin, height * 0.08);
 
@@ -725,7 +802,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         if (total > 1) {
           const pillText = `${index + 1} / ${total}`;
           const pillFontSize = Math.max(11, Math.round(width * 0.024));
-          ctx.font = `bold ${pillFontSize}px sans-serif`;
+          ctx.font = `700 ${pillFontSize}px ${BODY}`;
           const textWidth = ctx.measureText(pillText).width;
           const pillW = textWidth + 24;
           const pillH = pillFontSize + 12;
@@ -742,26 +819,84 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         }
 
         // 4. Content Block Layout
-        const layout = slide.layoutStyle || 'left';
+        const layout = slide.layoutStyle || ROLE_LAYOUT_DEFAULTS[slide.role || ''] || 'left';
         const isCenter = layout === 'center';
         const isHighlight = layout === 'highlight' || slide.role === 'offer';
-        const baseTitleSize = Math.max(22, Math.round(width * 0.052));
+        // Anton is a condensed display face — it reads smaller than a regular-width bold at the
+        // same pixel size, so it gets a slightly larger base to keep the same visual punch.
+        const baseTitleSize = Math.max(24, Math.round(width * 0.058));
         const baseSubSize = Math.max(13, Math.round(width * 0.028));
-        
-        let contentY = height * 0.32;
+        const titleFontSize = isHighlight ? Math.round(baseTitleSize * 1.1) : baseTitleSize;
+        const descFontSize = baseSubSize;
+        const badgeFontSize = Math.max(10, Math.round(width * 0.022));
+        const eyebrowFontSize = Math.max(11, Math.round(width * 0.025));
+        const ruleH = Math.max(2, Math.round(height * 0.005));
+        const iconD = Math.max(26, Math.round(width * 0.062));
+
+        // Measure the whole content block first so it can be centered in the space between
+        // header and footer, instead of always starting at a fixed Y (which left a large dead
+        // gap under short slides — see the "beneficio de la semana" / CTA slides).
+        let measuredHeight = iconD + 14;
+        if (slide.badge) measuredHeight += badgeFontSize + 10 + 20;
+        if (slide.eyebrow) measuredHeight += eyebrowFontSize + 14;
+        ctx.font = `400 ${titleFontSize}px ${HEAD}`;
+        measuredHeight += countWrappedLines(ctx, slide.title || '', textMaxWidth) * (titleFontSize * 1.35);
+        measuredHeight += 14 + ruleH + 22;
+        ctx.font = `400 ${descFontSize}px ${BODY}`;
+        measuredHeight += countWrappedLines(ctx, slide.subtitle || '', textMaxWidth) * (descFontSize * 1.45);
+
+        const headerBottom = height * 0.16;
+        const footerTop = height * 0.86 - 24;
+        const available = Math.max(0, footerTop - headerBottom);
+        let contentY = headerBottom + Math.max(0, (available - measuredHeight) / 2);
+        contentY = Math.min(contentY, Math.max(headerBottom, footerTop - measuredHeight));
+
         ctx.textAlign = isCenter ? 'center' : 'left';
         const drawX = isCenter ? width / 2 : leftMargin;
+
+        // Soft content card behind the text so it stays legible regardless of how bright the
+        // niche photo is underneath — without it, the lighter background overlay (see below)
+        // can wash out title/subtitle contrast.
+        {
+          const pad = width * 0.035;
+          const scrimW = Math.min(textMaxWidth + pad * 2, width * 0.94);
+          const scrimX = isCenter ? (width - scrimW) / 2 : leftMargin - pad;
+          const scrimY = contentY - pad * 0.6;
+          const scrimH = measuredHeight + pad * 1.2;
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+          drawRoundRect(ctx, scrimX, scrimY, scrimW, scrimH, 20);
+          ctx.fill();
+        }
+
+        // Role icon chip — quick visual cue per slide (hook/problem/benefit/offer/cta)
+        {
+          const icon = resolveIcon(slide);
+          const iconCx = isCenter ? width / 2 : leftMargin + iconD / 2;
+          const iconCy = contentY + iconD / 2;
+          ctx.fillStyle = `${primary}26`;
+          ctx.beginPath();
+          ctx.arc(iconCx, iconCy, iconD / 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.strokeStyle = `${primary}55`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.font = `${Math.round(iconD * 0.5)}px sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.fillText(icon, iconCx, iconCy + iconD * 0.18);
+          ctx.textAlign = isCenter ? 'center' : 'left';
+          contentY += iconD + 14;
+        }
 
         // Badge rendering (e.g. "⚡ SOLO HOY")
         if (slide.badge) {
           const badgeText = slide.badge.toUpperCase();
-          const badgeFontSize = Math.max(10, Math.round(width * 0.022));
-          ctx.font = `black ${badgeFontSize}px sans-serif`;
+          ctx.font = `400 ${badgeFontSize}px ${HEAD}`;
           const bTextWidth = ctx.measureText(badgeText).width;
           const badgeW = bTextWidth + 18;
           const badgeH = badgeFontSize + 10;
           const badgeX = isCenter ? (width / 2 - badgeW / 2) : leftMargin;
-          
+
           // Badge background (gradient look)
           const grad = ctx.createLinearGradient(badgeX, contentY, badgeX + badgeW, contentY);
           grad.addColorStop(0, '#fbbf24');
@@ -783,8 +918,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         // Eyebrow label rendering
         if (slide.eyebrow) {
           const eyebrowText = slide.eyebrow.toUpperCase();
-          const eyebrowFontSize = Math.max(11, Math.round(width * 0.025));
-          ctx.font = `black ${eyebrowFontSize}px sans-serif`;
+          ctx.font = `700 ${eyebrowFontSize}px ${BODY}`;
           ctx.fillStyle = primary;
           // Add letter spacing manually for premium look
           const spacedText = eyebrowText.split('').join(' ');
@@ -801,21 +935,18 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         }
 
         // Draw Title
-        const titleFontSize = isHighlight ? Math.round(baseTitleSize * 1.1) : baseTitleSize;
-        ctx.font = `bold ${titleFontSize}px sans-serif`;
+        ctx.font = `400 ${titleFontSize}px ${HEAD}`;
         ctx.fillStyle = titleColor;
         const afterTitleY = wrapText(ctx, slide.title || '', drawX, contentY, textMaxWidth, titleFontSize * 1.35);
 
         // Decorative horizontal rule line
         const ruleW = width * 0.09;
-        const ruleH = Math.max(2, Math.round(height * 0.005));
         const ruleX = isCenter ? (width / 2 - ruleW / 2) : leftMargin;
         ctx.fillStyle = primary;
         ctx.fillRect(ruleX, afterTitleY + 14, ruleW, ruleH);
 
         // Draw Subtitle / Description
-        const descFontSize = baseSubSize;
-        ctx.font = `normal ${descFontSize}px sans-serif`;
+        ctx.font = `400 ${descFontSize}px ${BODY}`;
         ctx.fillStyle = '#d4d4d4';
         wrapText(ctx, slide.subtitle || '', drawX, afterTitleY + 14 + ruleH + 22, textMaxWidth, descFontSize * 1.45);
 
@@ -837,7 +968,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         const contactFontSize = Math.max(10, Math.round(width * 0.024));
-        ctx.font = `semibold ${contactFontSize}px sans-serif`;
+        ctx.font = `600 ${contactFontSize}px ${BODY}`;
 
         let contactX = footerX + 20;
         const contactTextY = footerY + footerH / 2 + contactFontSize * 0.35;
@@ -857,7 +988,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
           ctx.textAlign = 'right';
           ctx.fillStyle = primary;
           const guideFontSize = Math.max(10, Math.round(width * 0.022));
-          ctx.font = `bold ${guideFontSize}px sans-serif`;
+          ctx.font = `700 ${guideFontSize}px ${BODY}`;
           ctx.fillText('Deslizar ➔', footerX + footerW - 20, contactTextY);
         }
 
@@ -873,12 +1004,21 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         if (imgRatio > canvasRatio) { drawWidth = height * imgRatio; offsetX = (width - drawWidth) / 2; }
         else { drawHeight = width / imgRatio; offsetY = (height - drawHeight) / 2; }
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+
+        // Vignette instead of a flat 65% scrim — keeps the header/footer legible without
+        // fully hiding the niche photo across the whole frame (the content card above
+        // handles legibility for the title/subtitle band specifically).
+        const vignette = ctx.createLinearGradient(0, 0, 0, height);
+        vignette.addColorStop(0, 'rgba(0,0,0,0.6)');
+        vignette.addColorStop(0.22, 'rgba(0,0,0,0.22)');
+        vignette.addColorStop(0.7, 'rgba(0,0,0,0.3)');
+        vignette.addColorStop(1, 'rgba(0,0,0,0.72)');
+        ctx.fillStyle = vignette;
         ctx.fillRect(0, 0, width, height);
         drawContent();
       };
       img.onerror = drawContent;
-      img.src = nicheBackgroundUrl;
+      img.src = slide.photoUrl || nicheBackgroundUrl;
     });
   };
 
@@ -897,6 +1037,24 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
     }
     ctx.fillText(line, x, currentY);
     return currentY;
+  }
+
+  // Same greedy-wrap pass as wrapText but without drawing — used to measure the content
+  // block's height up front so it can be vertically centered.
+  function countWrappedLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): number {
+    if (!text) return 0;
+    const words = text.split(' ');
+    let line = '', lines = 1;
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+        lines++;
+        line = words[n] + ' ';
+      } else {
+        line = testLine;
+      }
+    }
+    return lines;
   }
 
   // ─── Export — Fix 3: uses getFormatDimensions helper ─────────────────────

@@ -4,6 +4,41 @@ import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+// Busca 1 foto de stock en Pexels para un slide/escena puntual (no bloquea el flujo si falla:
+// el frontend cae a la imagen fija por rubro cuando el slide no trae photoUrl).
+async function fetchStockPhoto(query: string): Promise<string | null> {
+  if (!process.env.PEXELS_API_KEY || !query) return null;
+  try {
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=portrait`;
+    const response = await fetch(url, { headers: { Authorization: process.env.PEXELS_API_KEY } });
+    if (!response.ok) return null;
+    const data: any = await response.json();
+    const photo = data.photos?.[0];
+    return photo?.src?.portrait || photo?.src?.large2x || photo?.src?.large || null;
+  } catch (err) {
+    console.warn('Pexels API falló para query:', query, err);
+    return null;
+  }
+}
+
+// Enriquece cada slide/escena con su propia foto (usa photoKeywords si la IA lo generó,
+// si no cae a visualSuggestion o al rubro). Corre en paralelo y nunca tira: un fallo puntual
+// solo deja ese slide sin photoUrl.
+async function enrichWithPhotos(data: any, industry: string): Promise<void> {
+  if (!process.env.PEXELS_API_KEY) return;
+  const items: any[] = data?.slides || data?.scenes;
+  if (Array.isArray(items) && items.length > 0) {
+    await Promise.all(items.map(async (item) => {
+      const query = item.photoKeywords || item.visualSuggestion || industry;
+      item.photoUrl = await fetchStockPhoto(query);
+    }));
+  } else if (data && typeof data === 'object') {
+    // Post simple del generador local: no tiene array de slides, la sugerencia va en el tope.
+    const query = data.photoKeywords || data.visualSuggestion || industry;
+    data.photoUrl = await fetchStockPhoto(query);
+  }
+}
+
 // Helper para detectar si un error de Supabase se debe a que la tabla no existe (no migrada)
 function handleDbError(err: any, res: Response) {
   console.error('Database Error:', err);
@@ -293,6 +328,7 @@ REGLAS DE COPYWRITING:
 6. colorAccent: "primary" para color principal de marca, "secondary" para color acento/amarillo, "white" para blanco puro.
 7. badge: texto corto de urgencia o null si no aplica.
 8. Caption: persuasivo, con emojis bien ubicados, saltos de línea y CTA al final.
+9. photoKeywords: 3 a 5 palabras clave EN INGLÉS para buscar una foto de stock específica para ESE slide (no genérica del rubro). Deben describir la escena real de visualSuggestion, no el copy. Ej: "mechanic car hood repair", "barbershop chair interior close-up".
 
 Devolvé ÚNICAMENTE este JSON (sin markdown, sin texto extra):
 {
@@ -308,7 +344,8 @@ Devolvé ÚNICAMENTE este JSON (sin markdown, sin texto extra):
       "subtitle": "Texto secundario breve y complementario (máx 15 palabras)",
       "badge": null,
       "colorAccent": "primary",
-      "visualSuggestion": "Descripción del tratamiento visual recomendado para este slide"
+      "visualSuggestion": "Descripción del tratamiento visual recomendado para este slide",
+      "photoKeywords": "3 a 5 palabras clave en inglés para buscar la foto de este slide puntual"
     }
   ]
 }
@@ -329,6 +366,7 @@ REGLAS:
 3. Ritmo: escenas de 2-4 segundos. Dinánico y cortado.
 4. Locución: puede ser más larga pero siempre clara y directa.
 5. Cierre: CTA hablado Y escrito en pantalla.
+6. photoKeywords: 3 a 5 palabras clave EN INGLÉS para buscar una foto de stock que represente ESA escena puntual (no genérica del rubro).
 
 Devolvé ÚNICAMENTE este JSON:
 {
@@ -342,7 +380,8 @@ Devolvé ÚNICAMENTE este JSON:
       "textOnScreen": "Texto ultra breve en pantalla (máx 5 palabras)",
       "voiceOver": "Lo que dice la locución en este momento",
       "durationSeconds": 3,
-      "visualSuggestion": "Descripción del plano, movimiento de cámara o animación recomendada"
+      "visualSuggestion": "Descripción del plano, movimiento de cámara o animación recomendada",
+      "photoKeywords": "3 a 5 palabras clave en inglés para buscar la foto de esta escena puntual"
     }
   ]
 }`;
@@ -363,6 +402,7 @@ REGLAS:
 4. badge: llamada de urgencia corta (ej: "⚡ SOLO HOY", "🔥 ÚLTIMOS CUPOS") o null.
 5. visualSuggestion: describí el diseño con detalle profesional (colores, layout, tipografía, imagen de fondo).
 6. Caption: copy completo con emojis, saltos de línea y CTA claro al final.
+7. photoKeywords: 3 a 5 palabras clave EN INGLÉS para buscar una foto de stock específica para este post (no genérica del rubro).
 
 Devolvé ÚNICAMENTE este JSON:
 {
@@ -378,7 +418,8 @@ Devolvé ÚNICAMENTE este JSON:
       "subtitle": "Texto secundario que convierte en una línea",
       "badge": "⚡ SOLO ESTA SEMANA",
       "colorAccent": "secondary",
-      "visualSuggestion": "Descripción visual detallada del tratamiento de imagen, tipografía y layout"
+      "visualSuggestion": "Descripción visual detallada del tratamiento de imagen, tipografía y layout",
+      "photoKeywords": "3 a 5 palabras clave en inglés para buscar la foto de este post"
     }
   ]
 }`;
@@ -390,7 +431,7 @@ Devolvé ÚNICAMENTE este JSON:
 
     if (process.env.GEMINI_API_KEY) {
       console.log('Utilizando Gemini para generar contenido...');
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -436,6 +477,7 @@ Devolvé ÚNICAMENTE este JSON:
       cleaned = cleaned.trim();
       
       const parsed = JSON.parse(cleaned);
+      await enrichWithPhotos(parsed, industry);
       res.status(200).json({ success: true, ai_generated: true, data: parsed });
       return;
     }
@@ -446,6 +488,7 @@ Devolvé ÚNICAMENTE este JSON:
   // FALLBACK GENERATOR: Si no hay keys o el fetch falla, generamos contenido de excelente calidad
   console.log('Utilizando generador local de plantillas...');
   const result = generateFallbackLocal(contentType, businessName, industry, goal, tone, offer, benefits, slidesCount, duration);
+  await enrichWithPhotos(result, industry);
   res.status(200).json({ success: true, ai_generated: false, data: result });
 });
 
@@ -483,44 +526,44 @@ function generateFallbackLocal(
     // Plantillas de contenido local precargado
     if (category === 'gym') {
       slides.push(
-        { slideNumber: 1, role: 'hook', eyebrow: 'DATO CLAVE', title: `¿Querés ponerte en forma y no sabés cómo empezar?`, subtitle: `En ${business} te acompañamos en cada paso de tu camino fitness.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen motivadora de alguien entrenando, fondo oscuro con texto en color principal.' },
-        { slideNumber: 2, role: 'problem', eyebrow: 'EL DESAFÍO', title: `El problema de las rutinas aburridas`, subtitle: `Mucha gente abandona porque entrena sola o sin un plan específico para su nivel.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto en blanco y negro de un gimnasio vacío o persona desmotivada.' },
-        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRA PROPUESTA', title: `Nuestra solución a tu medida`, subtitle: `Ofrecemos rutinas personalizadas, clases dinámicas y coach de seguimiento continuo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto grupal alegre en una clase con el color principal como acento.' },
-        { slideNumber: 4, role: 'offer', eyebrow: 'PROMO DE LA SEMANA', title: `¡Aprovechá la oferta especial!`, subtitle: offer || `20% de descuento en la matrícula de inscripción este mes.`, colorAccent: 'secondary', badge: '⚡ SOLO POR HOY', visualSuggestion: 'Texto grande y destacado con la oferta resaltada en amarillo brillante.' },
-        { slideNumber: 5, role: 'cta', eyebrow: 'ÚLTIMO PASO', title: `¡Escribinos para reservar!`, subtitle: `Hacé clic en el enlace para mandarnos un mensaje de WhatsApp directo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Pantalla de cierre limpia con logo de WhatsApp grande y colores de marca.' }
+        { slideNumber: 1, role: 'hook', eyebrow: 'DATO CLAVE', title: `¿Querés ponerte en forma y no sabés cómo empezar?`, subtitle: `En ${business} te acompañamos en cada paso de tu camino fitness.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen motivadora de alguien entrenando, fondo oscuro con texto en color principal.', photoKeywords: 'gym workout motivation dark' },
+        { slideNumber: 2, role: 'problem', eyebrow: 'EL DESAFÍO', title: `El problema de las rutinas aburridas`, subtitle: `Mucha gente abandona porque entrena sola o sin un plan específico para su nivel.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto en blanco y negro de un gimnasio vacío o persona desmotivada.', photoKeywords: 'empty gym no motivation' },
+        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRA PROPUESTA', title: `Nuestra solución a tu medida`, subtitle: `Ofrecemos rutinas personalizadas, clases dinámicas y coach de seguimiento continuo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto grupal alegre en una clase con el color principal como acento.', photoKeywords: 'group fitness class coach' },
+        { slideNumber: 4, role: 'offer', eyebrow: 'PROMO DE LA SEMANA', title: `¡Aprovechá la oferta especial!`, subtitle: offer || `20% de descuento en la matrícula de inscripción este mes.`, colorAccent: 'secondary', badge: '⚡ SOLO POR HOY', visualSuggestion: 'Texto grande y destacado con la oferta resaltada en amarillo brillante.', photoKeywords: 'gym weights close up' },
+        { slideNumber: 5, role: 'cta', eyebrow: 'ÚLTIMO PASO', title: `¡Escribinos para reservar!`, subtitle: `Hacé clic en el enlace para mandarnos un mensaje de WhatsApp directo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Pantalla de cierre limpia con logo de WhatsApp grande y colores de marca.', photoKeywords: 'smartphone chat contact' }
       );
     } else if (category === 'hair') {
       slides.push(
-        { slideNumber: 1, role: 'hook', eyebrow: 'ESTILO Y TENDENCIA', title: `Un cambio de look que potencia tu confianza`, subtitle: `Descubrí el estilo ideal para vos en ${business}.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen de un corte de pelo moderno con iluminación cálida y limpia.' },
-        { slideNumber: 2, role: 'problem', eyebrow: 'EL DIAGNÓSTICO', title: `¿Corte apurado y sin asesoramiento?`, subtitle: `Ir a la peluquería no debería ser un trámite rápido, sino una experiencia de renovación.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto detallada de herramientas de barbería o salón, estética premium.' },
-        { slideNumber: 3, role: 'benefit', eyebrow: 'QUÉ HACEMOS DIFERENTE', title: `Experiencia de Asesoría Completa`, subtitle: `Nuestros estilistas analizan tus rasgos y te recomiendan lo mejor para tu tipo de cabello.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto del estilista trabajando con una sonrisa en un salón moderno.' },
-        { slideNumber: 4, role: 'offer', eyebrow: 'BENEFICIO EXCLUSIVO', title: `Tu beneficio de la semana`, subtitle: offer || `Corte y servicio de hidratación profunda con 15% OFF de lunes a miércoles.`, colorAccent: 'secondary', badge: '🔥 CUPOS LIMITADOS', visualSuggestion: 'Placa de colores contrastantes destacando la promoción de la semana.' },
-        { slideNumber: 5, role: 'cta', eyebrow: 'RESERVÁ TU LUGAR', title: `¡Reservá tu turno ya!`, subtitle: `Escribinos por WhatsApp para asegurar tu lugar. ¡Cupos limitados!`, colorAccent: 'primary', badge: null, visualSuggestion: 'Botones y contacto de WhatsApp destacados sobre fondo de marca.' }
+        { slideNumber: 1, role: 'hook', eyebrow: 'ESTILO Y TENDENCIA', title: `Un cambio de look que potencia tu confianza`, subtitle: `Descubrí el estilo ideal para vos en ${business}.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen de un corte de pelo moderno con iluminación cálida y limpia.', photoKeywords: 'modern haircut barber salon' },
+        { slideNumber: 2, role: 'problem', eyebrow: 'EL DIAGNÓSTICO', title: `¿Corte apurado y sin asesoramiento?`, subtitle: `Ir a la peluquería no debería ser un trámite rápido, sino una experiencia de renovación.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto detallada de herramientas de barbería o salón, estética premium.', photoKeywords: 'barber tools closeup vintage' },
+        { slideNumber: 3, role: 'benefit', eyebrow: 'QUÉ HACEMOS DIFERENTE', title: `Experiencia de Asesoría Completa`, subtitle: `Nuestros estilistas analizan tus rasgos y te recomiendan lo mejor para tu tipo de cabello.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto del estilista trabajando con una sonrisa en un salón moderno.', photoKeywords: 'hairstylist smiling salon client' },
+        { slideNumber: 4, role: 'offer', eyebrow: 'BENEFICIO EXCLUSIVO', title: `Tu beneficio de la semana`, subtitle: offer || `Corte y servicio de hidratación profunda con 15% OFF de lunes a miércoles.`, colorAccent: 'secondary', badge: '🔥 CUPOS LIMITADOS', visualSuggestion: 'Placa de colores contrastantes destacando la promoción de la semana.', photoKeywords: 'barbershop chair interior' },
+        { slideNumber: 5, role: 'cta', eyebrow: 'RESERVÁ TU LUGAR', title: `¡Reservá tu turno ya!`, subtitle: `Escribinos por WhatsApp para asegurar tu lugar. ¡Cupos limitados!`, colorAccent: 'primary', badge: null, visualSuggestion: 'Botones y contacto de WhatsApp destacados sobre fondo de marca.', photoKeywords: 'whatsapp contact chat phone' }
       );
     } else if (category === 'inmo') {
       slides.push(
-        { slideNumber: 1, role: 'hook', eyebrow: 'ESTILO DE VIDA', title: `Encontrá el hogar que siempre soñaste`, subtitle: `En ${business} tenemos las propiedades más exclusivas de la zona.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto gran angular de un living moderno y luminoso.' },
-        { slideNumber: 2, role: 'problem', eyebrow: 'EL MERCADO', title: `¿El trámite de alquiler o compra te estresa?`, subtitle: `Sabemos lo difícil que es encontrar un lugar que cumpla con todos tus requisitos y presupuesto.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto conceptual de llaves y contratos firmados con luz tenue.' },
-        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRO COMPROMISO', title: `Trato humano y asesoramiento legal`, subtitle: `Te guiamos de principio a fin, ahorrándote trámites pesados y garantizando tu seguridad.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen de asesor inmobiliario conversando cordialmente con clientes en una propiedad.' },
-        { slideNumber: 4, role: 'offer', eyebrow: 'OPORTUNIDAD ÚNICA', title: `Propiedad Destacada`, subtitle: offer || `Nuevas propiedades en pozo con financiación exclusiva de hasta 24 cuotas sin interés.`, colorAccent: 'secondary', badge: '🏢 LANZAMIENTO', visualSuggestion: 'Plano del departamento o render 3D con banner de oportunidad única.' },
-        { slideNumber: 5, role: 'cta', eyebrow: 'CONTACTO DIRECTO', title: `¡Hablemos hoy mismo!`, subtitle: `Hacé clic en el botón para recibir el catálogo completo de propiedades.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Detalle de contacto con el isotipo de la empresa inmobiliaria.' }
+        { slideNumber: 1, role: 'hook', eyebrow: 'ESTILO DE VIDA', title: `Encontrá el hogar que siempre soñaste`, subtitle: `En ${business} tenemos las propiedades más exclusivas de la zona.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto gran angular de un living moderno y luminoso.', photoKeywords: 'modern bright living room' },
+        { slideNumber: 2, role: 'problem', eyebrow: 'EL MERCADO', title: `¿El trámite de alquiler o compra te estresa?`, subtitle: `Sabemos lo difícil que es encontrar un lugar que cumpla con todos tus requisitos y presupuesto.`, colorAccent: 'white', badge: null, visualSuggestion: 'Foto conceptual de llaves y contratos firmados con luz tenue.', photoKeywords: 'house keys contract signing' },
+        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRO COMPROMISO', title: `Trato humano y asesoramiento legal`, subtitle: `Te guiamos de principio a fin, ahorrándote trámites pesados y garantizando tu seguridad.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Imagen de asesor inmobiliario conversando cordialmente con clientes en una propiedad.', photoKeywords: 'real estate agent handshake client' },
+        { slideNumber: 4, role: 'offer', eyebrow: 'OPORTUNIDAD ÚNICA', title: `Propiedad Destacada`, subtitle: offer || `Nuevas propiedades en pozo con financiación exclusiva de hasta 24 cuotas sin interés.`, colorAccent: 'secondary', badge: '🏢 LANZAMIENTO', visualSuggestion: 'Plano del departamento o render 3D con banner de oportunidad única.', photoKeywords: 'new apartment building exterior' },
+        { slideNumber: 5, role: 'cta', eyebrow: 'CONTACTO DIRECTO', title: `¡Hablemos hoy mismo!`, subtitle: `Hacé clic en el botón para recibir el catálogo completo de propiedades.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Detalle de contacto con el isotipo de la empresa inmobiliaria.', photoKeywords: 'real estate office contact desk' }
       );
     } else if (category === 'taller') {
       slides.push(
-        { slideNumber: 1, role: 'hook', eyebrow: 'SEGURIDAD VIAL', title: `Mantené tu auto seguro en la ruta`, subtitle: `En ${business} cuidamos tu coche con tecnología de diagnóstico avanzada.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto de un capó de auto abierto con mecánico usando herramientas especializadas.' },
-        { slideNumber: 2, role: 'problem', eyebrow: 'EL DIAGNÓSTICO', title: `El peligro de los ruidos extraños`, subtitle: `Un pequeño ruido no resuelto hoy puede convertirse en una rotura costosa y peligrosa mañana.`, colorAccent: 'white', badge: null, visualSuggestion: 'Primer plano de frenos desgastados o motor con luz de advertencia.' },
-        { slideNumber: 3, role: 'benefit', eyebrow: 'GARANTÍA DE CONFIANZA', title: `Mecánicos certificados y repuestos originales`, subtitle: `Garantía escrita en todos los trabajos y entrega a término pactado.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Taller ordenado y limpio, con un auto elevado y herramientas de precisión.' },
-        { slideNumber: 4, role: 'offer', eyebrow: 'OFERTA DE MANTENIMIENTO', title: `Checklist de Seguridad Gratis`, subtitle: offer || `Alineación y balanceo bonificados con el cambio de aceite de esta semana.`, colorAccent: 'secondary', badge: '🚗 BENEFICIO', visualSuggestion: 'Cuadro de oferta llamativo con borde naranja de alerta y descuentos.' },
-        { slideNumber: 5, role: 'cta', eyebrow: 'RESERVA DIRECTA', title: `¡Agendá tu revisión hoy!`, subtitle: `Consultanos por WhatsApp y coordiná el ingreso de tu vehículo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Información de contacto fácil de leer con logo de WhatsApp.' }
+        { slideNumber: 1, role: 'hook', eyebrow: 'SEGURIDAD VIAL', title: `Mantené tu auto seguro en la ruta`, subtitle: `En ${business} cuidamos tu coche con tecnología de diagnóstico avanzada.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Foto de un capó de auto abierto con mecánico usando herramientas especializadas.', photoKeywords: 'mechanic car hood repair' },
+        { slideNumber: 2, role: 'problem', eyebrow: 'EL DIAGNÓSTICO', title: `El peligro de los ruidos extraños`, subtitle: `Un pequeño ruido no resuelto hoy puede convertirse en una rotura costosa y peligrosa mañana.`, colorAccent: 'white', badge: null, visualSuggestion: 'Primer plano de frenos desgastados o motor con luz de advertencia.', photoKeywords: 'car brake worn closeup' },
+        { slideNumber: 3, role: 'benefit', eyebrow: 'GARANTÍA DE CONFIANZA', title: `Mecánicos certificados y repuestos originales`, subtitle: `Garantía escrita en todos los trabajos y entrega a término pactado.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Taller ordenado y limpio, con un auto elevado y herramientas de precisión.', photoKeywords: 'clean auto repair shop' },
+        { slideNumber: 4, role: 'offer', eyebrow: 'OFERTA DE MANTENIMIENTO', title: `Checklist de Seguridad Gratis`, subtitle: offer || `Alineación y balanceo bonificados con el cambio de aceite de esta semana.`, colorAccent: 'secondary', badge: '🚗 BENEFICIO', visualSuggestion: 'Cuadro de oferta llamativo con borde naranja de alerta y descuentos.', photoKeywords: 'car maintenance service tools' },
+        { slideNumber: 5, role: 'cta', eyebrow: 'RESERVA DIRECTA', title: `¡Agendá tu revisión hoy!`, subtitle: `Consultanos por WhatsApp y coordiná el ingreso de tu vehículo.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Información de contacto fácil de leer con logo de WhatsApp.', photoKeywords: 'mechanic shop contact phone' }
       );
     } else {
       // Genérico
       slides.push(
-        { slideNumber: 1, role: 'hook', eyebrow: 'BIENVENIDO', title: `Potenciá tu día con ${business}`, subtitle: `Soluciones profesionales diseñadas especialmente para vos.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Fondo abstracto en degradé con colores corporativos y tipografía nítida.' },
-        { slideNumber: 2, role: 'problem', eyebrow: 'EL RETO', title: `El desafío de encontrar la solución ideal`, subtitle: `Muchas veces perdés tiempo y dinero probando opciones genéricas que no resuelven tu caso.`, colorAccent: 'white', badge: null, visualSuggestion: 'Imagen artística minimalista representando confusión o desorganización.' },
-        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRO DIFERENCIAL', title: `Por qué elegirnos`, subtitle: benefits || `Ofrecemos un servicio de alta calidad enfocado en la satisfacción y el retorno del cliente.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Gráfico limpio o icono que refleje crecimiento o soporte premium.' },
-        { slideNumber: 4, role: 'offer', eyebrow: 'PROPUESTA DE VALOR', title: `Beneficio único para nuevos clientes`, subtitle: offer || `¡Consultanos hoy y obtené una asesoría de diagnóstico completamente bonificada!`, colorAccent: 'secondary', badge: '🔥 REGALO', visualSuggestion: 'Destacado de la oferta con el color secundario de la marca.' },
-        { slideNumber: 5, role: 'cta', eyebrow: 'CONTACTO', title: `¡Ponete en contacto!`, subtitle: `Escribinos ahora para arrancar. ¡Estamos listos para ayudarte!`, colorAccent: 'primary', badge: null, visualSuggestion: 'Cierre limpio con logo y datos del negocio.' }
+        { slideNumber: 1, role: 'hook', eyebrow: 'BIENVENIDO', title: `Potenciá tu día con ${business}`, subtitle: `Soluciones profesionales diseñadas especialmente para vos.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Fondo abstracto en degradé con colores corporativos y tipografía nítida.', photoKeywords: 'abstract gradient business background' },
+        { slideNumber: 2, role: 'problem', eyebrow: 'EL RETO', title: `El desafío de encontrar la solución ideal`, subtitle: `Muchas veces perdés tiempo y dinero probando opciones genéricas que no resuelven tu caso.`, colorAccent: 'white', badge: null, visualSuggestion: 'Imagen artística minimalista representando confusión o desorganización.', photoKeywords: 'confused person desk stress' },
+        { slideNumber: 3, role: 'benefit', eyebrow: 'NUESTRO DIFERENCIAL', title: `Por qué elegirnos`, subtitle: benefits || `Ofrecemos un servicio de alta calidad enfocado en la satisfacción y el retorno del cliente.`, colorAccent: 'primary', badge: null, visualSuggestion: 'Gráfico limpio o icono que refleje crecimiento o soporte premium.', photoKeywords: 'business growth success chart' },
+        { slideNumber: 4, role: 'offer', eyebrow: 'PROPUESTA DE VALOR', title: `Beneficio único para nuevos clientes`, subtitle: offer || `¡Consultanos hoy y obtené una asesoría de diagnóstico completamente bonificada!`, colorAccent: 'secondary', badge: '🔥 REGALO', visualSuggestion: 'Destacado de la oferta con el color secundario de la marca.', photoKeywords: 'gift box discount offer' },
+        { slideNumber: 5, role: 'cta', eyebrow: 'CONTACTO', title: `¡Ponete en contacto!`, subtitle: `Escribinos ahora para arrancar. ¡Estamos listos para ayudarte!`, colorAccent: 'primary', badge: null, visualSuggestion: 'Cierre limpio con logo y datos del negocio.', photoKeywords: 'customer service contact smartphone' }
       );
     }
 
@@ -543,11 +586,11 @@ function generateFallbackLocal(
 
   } else if (type === 'reel') {
     const scenes = [
-      { sceneNumber: 1, role: 'hook', textOnScreen: `¿Cansado de lo mismo?`, voiceOver: `Si estás cansado de no encontrar soluciones reales, prestá atención.`, durationSeconds: 3, visualSuggestion: 'Toma rápida de primer plano de persona pensativa.' },
-      { sceneNumber: 2, role: 'problem', textOnScreen: `Este es el gran error...`, voiceOver: `El gran error es elegir servicios estándar que no se adaptan a tu negocio local.`, durationSeconds: 4, visualSuggestion: 'Cambio de plano a un espacio de trabajo con ritmo dinámico.' },
-      { sceneNumber: 3, role: 'solution', textOnScreen: `Descubrí ${business}`, voiceOver: `En ${business} diseñamos un plan específico para resolver esto a tu medida.`, durationSeconds: 4, visualSuggestion: 'Muestra de los productos, local o el equipo sonriendo.' },
-      { sceneNumber: 4, role: 'offer', textOnScreen: offer || `Beneficio especial hoy`, voiceOver: `Y si nos escribís hoy, te llevás un beneficio exclusivo para comenzar sin vueltas.`, durationSeconds: 3, visualSuggestion: 'Placa de texto grande con la oferta.' },
-      { sceneNumber: 5, role: 'cta', textOnScreen: `¡Escribinos por WhatsApp!`, voiceOver: `Hacé clic en el enlace de nuestro perfil y escribinos. ¡Te esperamos!`, durationSeconds: Math.max(2, duration - 14), visualSuggestion: 'Toma final del equipo indicando escribir por privado con animación de flecha.' }
+      { sceneNumber: 1, role: 'hook', textOnScreen: `¿Cansado de lo mismo?`, voiceOver: `Si estás cansado de no encontrar soluciones reales, prestá atención.`, durationSeconds: 3, visualSuggestion: 'Toma rápida de primer plano de persona pensativa.', photoKeywords: 'thoughtful person closeup portrait' },
+      { sceneNumber: 2, role: 'problem', textOnScreen: `Este es el gran error...`, voiceOver: `El gran error es elegir servicios estándar que no se adaptan a tu negocio local.`, durationSeconds: 4, visualSuggestion: 'Cambio de plano a un espacio de trabajo con ritmo dinámico.', photoKeywords: 'busy workspace dynamic office' },
+      { sceneNumber: 3, role: 'solution', textOnScreen: `Descubrí ${business}`, voiceOver: `En ${business} diseñamos un plan específico para resolver esto a tu medida.`, durationSeconds: 4, visualSuggestion: 'Muestra de los productos, local o el equipo sonriendo.', photoKeywords: 'happy team smiling office' },
+      { sceneNumber: 4, role: 'offer', textOnScreen: offer || `Beneficio especial hoy`, voiceOver: `Y si nos escribís hoy, te llevás un beneficio exclusivo para comenzar sin vueltas.`, durationSeconds: 3, visualSuggestion: 'Placa de texto grande con la oferta.', photoKeywords: 'gift discount offer surprise' },
+      { sceneNumber: 5, role: 'cta', textOnScreen: `¡Escribinos por WhatsApp!`, voiceOver: `Hacé clic en el enlace de nuestro perfil y escribinos. ¡Te esperamos!`, durationSeconds: Math.max(2, duration - 14), visualSuggestion: 'Toma final del equipo indicando escribir por privado con animación de flecha.', photoKeywords: 'smartphone whatsapp chat hand' }
     ];
 
     return {
@@ -562,7 +605,8 @@ function generateFallbackLocal(
       title: `Post simple para ${business}`,
       caption: `¡Hola! ¿Conocés nuestro servicio de ${industry || 'asesoría'} en ${business}?\n\nTe ofrecemos la mejor calidad y trato cercano de la zona para ayudarte a lograr tus objetivos.\n\n${offer ? `🔥 Promo exclusiva: ${offer}\n\n` : ''}📲 Hacé clic en nuestro link de contacto o escribinos por WhatsApp para agendar una llamada.`,
       hashtags: [`#${business.replace(/\s+/g, '')}`, '#post', '#novedades'],
-      visualSuggestion: `Diseño con fondo de color corporativo de la marca. Texto central llamativo con la oferta: "${offer || business}". Logotipo del negocio en la esquina superior derecha y datos de contacto (WhatsApp/Sitio) en la parte inferior.`
+      visualSuggestion: `Diseño con fondo de color corporativo de la marca. Texto central llamativo con la oferta: "${offer || business}". Logotipo del negocio en la esquina superior derecha y datos de contacto (WhatsApp/Sitio) en la parte inferior.`,
+      photoKeywords: `${industry || 'business'} professional service`
     };
   }
 }
