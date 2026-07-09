@@ -262,8 +262,9 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
               )}
             </div>
 
-            {/* Text block */}
-            <div className={`my-auto ${layout === 'center' ? 'text-center' : 'text-left'}`}>
+            {/* Text block — px-5 keeps it clear of the ‹/› nav buttons, which sit absolutely
+                positioned at the edges and vertically centered same as this block. */}
+            <div className={`my-auto px-5 ${layout === 'center' ? 'text-center' : 'text-left'}`}>
               {/* Role icon chip — quick visual cue per slide (hook/problem/benefit/offer/cta) */}
               <div className={`mb-2 flex ${layout === 'center' ? 'justify-center' : 'justify-start'}`}>
                 <span
