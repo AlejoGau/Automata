@@ -26,6 +26,25 @@ async function fetchStockPhoto(query: string): Promise<string | null> {
   }
 }
 
+// Enriquece las escenas de video de tipo `stock`/`screen_recording` con la URL real de
+// una foto de Pexels (según su stockQuery, con respaldo en stockAlternatives). Corre en
+// paralelo y nunca tira: si una foto falla, esa escena queda sin photoUrl y el front cae
+// a un fondo degradado limpio.
+async function enrichVideoPhotos(storyboard: any): Promise<void> {
+  if (!process.env.PEXELS_API_KEY) return;
+  const scenes: any[] = storyboard?.scenes;
+  if (!Array.isArray(scenes)) return;
+  await Promise.all(scenes.map(async (scene) => {
+    const v = scene?.visual;
+    if (!v || (v.type !== 'stock' && v.type !== 'screen_recording')) return;
+    const queries: string[] = [v.stockQuery, ...(v.stockAlternatives || []), v.description].filter(Boolean);
+    for (const q of queries) {
+      const url = await fetchStockPhoto(q);
+      if (url) { v.photoUrl = url; return; }
+    }
+  }));
+}
+
 // Enriquece cada slide/escena con su propia foto (usa photoKeywords si la IA lo generó,
 // si no cae a visualSuggestion o al rubro). Corre en paralelo y nunca tira: un fallo puntual
 // solo deja ese slide sin photoUrl.
@@ -718,6 +737,7 @@ router.post('/video/storyboard', requireAuth, async (req: AuthenticatedRequest, 
   }
   try {
     const result = await generateStoryboard({ topic, niche, durationSeconds, style, language });
+    await enrichVideoPhotos(result.storyboard);
     res.status(200).json(result);
   } catch (err: any) {
     console.error('Error generando storyboard:', err);

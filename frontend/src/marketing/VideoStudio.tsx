@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Player } from "@remotion/player";
-import { Sparkles, Loader2, AlertCircle, Film, Plus, X, Play } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, Film, Plus, X, Play, Download } from "lucide-react";
 import { VideoComposition } from "./VideoComposition";
 import type { SceneData, Bubble } from "./SceneRenderer";
 
@@ -86,6 +86,23 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
     }
   };
 
+  // Descarga el guion + storyboard como JSON (listo para el toolkit de render)
+  const downloadJson = () => {
+    if (!sb) return;
+    const slug = (sb.title || sb.projectId || "storyboard")
+      .toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "storyboard";
+    const blob = new Blob([JSON.stringify(sb, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}.storyboard.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   // Actualización inmutable de una escena
   const patchScene = (id: string, patch: Partial<SceneData>) => {
     setSb((prev) => prev && { ...prev, scenes: prev.scenes.map((s) => (s.id === id ? { ...s, ...patch } : s)) });
@@ -118,6 +135,15 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
         <span className="text-[10px] px-2 py-1 rounded bg-orange-950/40 border border-orange-900/40 text-orange-400 select-none">
           Storyboard + Preview
         </span>
+        {sb && (
+          <button
+            onClick={downloadJson}
+            title="Descargar el guion + storyboard (JSON) para el render"
+            className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-neutral-800/60 border border-neutral-700 text-neutral-200 hover:bg-neutral-700/60 hover:text-white transition-all"
+          >
+            <Download size={14} /> Descargar guion
+          </button>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
@@ -206,8 +232,8 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
                 </div>
               )}
               <p className="mt-3 text-[10.5px] text-neutral-600 leading-normal">
-                El preview usa los componentes finales. Las escenas de stock muestran un placeholder;
-                el render final (con footage de Pexels + voz) se hace en el toolkit de video.
+                El preview usa los componentes y las fotos reales de Pexels. El render final en video
+                (con voz y subtítulos sincronizados) se hace en el toolkit; descargá el guion para producirlo.
               </p>
             </div>
 
