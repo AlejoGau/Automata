@@ -29,3 +29,8 @@ yarn-error.log*
 .vercel
 .idea/
 .vscode/
+
+# Artefactos generados / uploads (no versionar)
+storage/
+files/
+files.zip
