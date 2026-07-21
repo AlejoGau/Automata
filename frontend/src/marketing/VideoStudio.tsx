@@ -43,6 +43,13 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
   const [warnings, setWarnings] = useState<string[]>([]);
   const [sb, setSb] = useState<Storyboard | null>(null);
 
+  // Estado del render (mp4)
+  const [rendering, setRendering] = useState(false);
+  const [renderStage, setRenderStage] = useState("");
+  const [renderProgress, setRenderProgress] = useState(0);
+  const [renderUrl, setRenderUrl] = useState<string | null>(null);
+  const [renderError, setRenderError] = useState<string | null>(null);
+
   // Cargar nichos disponibles
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/marketing/video/niches`, { headers: getHeaders() })
@@ -79,10 +86,61 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
       }
       setSb(data.storyboard);
       setWarnings(data.warnings || []);
+      // nuevo guion → descartar el render anterior
+      setRenderUrl(null);
+      setRenderError(null);
+      setRenderProgress(0);
+      setRenderStage("");
     } catch {
       setError("Error de conexión al generar.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Renderiza el mp4 final en el server (voz + subtítulos + footage) y hace polling.
+  const renderVideo = async () => {
+    if (!sb || rendering) return;
+    setRendering(true);
+    setRenderError(null);
+    setRenderUrl(null);
+    setRenderProgress(0);
+    setRenderStage("En cola");
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/marketing/video/render`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ storyboard: sb }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.jobId) {
+        setRenderError(data.error || "No se pudo iniciar el render.");
+        setRendering(false);
+        return;
+      }
+      const jobId = data.jobId;
+      // Polling cada 2.5s
+      const poll = async (): Promise<void> => {
+        const r = await fetch(`${BACKEND_URL}/api/marketing/video/render/${jobId}`, { headers: getHeaders() });
+        const j = await r.json();
+        setRenderProgress(j.progress || 0);
+        setRenderStage(j.stage || "");
+        if (j.status === "done" && j.videoUrl) {
+          setRenderUrl(j.videoUrl);
+          setRendering(false);
+          return;
+        }
+        if (j.status === "error") {
+          setRenderError(j.error || "El render falló.");
+          setRendering(false);
+          return;
+        }
+        setTimeout(poll, 2500);
+      };
+      setTimeout(poll, 2500);
+    } catch {
+      setRenderError("Error de conexión con el servicio de render.");
+      setRendering(false);
     }
   };
 
@@ -142,13 +200,24 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
           Storyboard + Preview
         </span>
         {sb && (
-          <button
-            onClick={downloadJson}
-            title="Descargar el guion + storyboard (JSON) para el render"
-            className="ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-neutral-800/60 border border-neutral-700 text-neutral-200 hover:bg-neutral-700/60 hover:text-white transition-all"
-          >
-            <Download size={14} /> Descargar guion
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={downloadJson}
+              title="Descargar el guion + storyboard (JSON) para el render"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-neutral-800/60 border border-neutral-700 text-neutral-200 hover:bg-neutral-700/60 hover:text-white transition-all"
+            >
+              <Download size={14} /> Descargar guion
+            </button>
+            <button
+              onClick={renderVideo}
+              disabled={rendering}
+              title="Generar el video mp4 final (voz + subtítulos + footage) en el server"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-md shadow-orange-500/15 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {rendering ? <Loader2 size={14} className="animate-spin" /> : <Film size={14} />}
+              {rendering ? "Renderizando…" : "Renderizar video"}
+            </button>
+          </div>
         )}
       </header>
 
@@ -237,9 +306,40 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
                   {warnings.map((w, i) => <div key={i}>• {w}</div>)}
                 </div>
               )}
+
+              {/* Progreso del render mp4 */}
+              {rendering && (
+                <div className="mt-3 p-3 bg-orange-950/20 border border-orange-900/40 rounded-xl">
+                  <div className="flex items-center justify-between text-[11px] text-orange-300 font-semibold mb-2">
+                    <span className="flex items-center gap-1.5">
+                      <Loader2 size={12} className="animate-spin" /> {renderStage || "Renderizando"}…
+                    </span>
+                    <span>{Math.round(renderProgress * 100)}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all" style={{ width: `${Math.max(4, renderProgress * 100)}%` }} />
+                  </div>
+                  <p className="mt-2 text-[10px] text-neutral-500">Generar el video tarda 1-3 min. Podés seguir editando otras cosas.</p>
+                </div>
+              )}
+              {renderError && (
+                <div className="mt-3 p-3 bg-rose-950/40 border border-rose-900/40 rounded-xl text-rose-400 text-[11px] flex items-center gap-2">
+                  <AlertCircle size={14} /> {renderError}
+                </div>
+              )}
+              {renderUrl && !rendering && (
+                <a
+                  href={renderUrl}
+                  download
+                  className="mt-3 w-full px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white transition-all"
+                >
+                  <Download size={16} /> Descargar video (mp4)
+                </a>
+              )}
+
               <p className="mt-3 text-[10.5px] text-neutral-600 leading-normal">
-                El preview usa los componentes y las fotos reales de Pexels. El render final en video
-                (con voz y subtítulos sincronizados) se hace en el toolkit; descargá el guion para producirlo.
+                El preview usa los componentes y las fotos reales de Pexels. <b className="text-neutral-500">Renderizar video</b> genera
+                el mp4 final con voz y subtítulos sincronizados en el server y te lo deja para descargar.
               </p>
             </div>
 

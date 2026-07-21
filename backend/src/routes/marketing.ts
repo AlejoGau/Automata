@@ -745,4 +745,51 @@ router.post('/video/storyboard', requireAuth, async (req: AuthenticatedRequest, 
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// PROXY al servicio de render (mantiene el secreto fuera del browser)
+// ─────────────────────────────────────────────────────────────
+const RENDER_SERVICE_URL = process.env.RENDER_SERVICE_URL || '';
+const RENDER_SHARED_SECRET = process.env.RENDER_SHARED_SECRET || '';
+
+// Dispara un render. El front pega con su JWT; acá reenviamos con el secreto compartido.
+router.post('/video/render', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!RENDER_SERVICE_URL) {
+    res.status(503).json({ error: 'El servicio de render no está configurado (RENDER_SERVICE_URL).' });
+    return;
+  }
+  const { storyboard } = req.body || {};
+  if (!storyboard?.scenes?.length) {
+    res.status(400).json({ error: 'Falta un storyboard con escenas.' });
+    return;
+  }
+  try {
+    const r = await fetch(`${RENDER_SERVICE_URL}/video/render`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-render-secret': RENDER_SHARED_SECRET },
+      body: JSON.stringify({ storyboard }),
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err: any) {
+    res.status(502).json({ error: 'No se pudo contactar el servicio de render', details: err?.message });
+  }
+});
+
+// Estado de un render (polling).
+router.get('/video/render/:id', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  if (!RENDER_SERVICE_URL) {
+    res.status(503).json({ error: 'El servicio de render no está configurado (RENDER_SERVICE_URL).' });
+    return;
+  }
+  try {
+    const r = await fetch(`${RENDER_SERVICE_URL}/video/render/${encodeURIComponent(req.params.id)}`, {
+      headers: { 'x-render-secret': RENDER_SHARED_SECRET },
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err: any) {
+    res.status(502).json({ error: 'No se pudo contactar el servicio de render', details: err?.message });
+  }
+});
+
 export default router;
