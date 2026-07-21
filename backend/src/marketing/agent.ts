@@ -11,7 +11,7 @@ import { StoryboardSchema, Storyboard, validateStoryboard } from './schema.js';
 import { loadNiche } from './niche.js';
 import { loadSkills } from './skills.js';
 
-const MODEL = process.env.MARKETING_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.MARKETING_MODEL || 'claude-sonnet-5';
 
 const client = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
