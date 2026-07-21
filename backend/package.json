@@ -11,7 +11,8 @@
     "webhook:setup": "tsx src/setupWebhook.ts",
     "send:test": "tsx src/sendTest.ts",
     "send:cloud": "tsx src/sendTestCloud.ts",
-    "studio:storyboard": "tsx src/marketing/testStoryboard.ts"
+    "studio:storyboard": "tsx src/marketing/testStoryboard.ts",
+    "studio:skills:upload": "tsx src/marketing/uploadSkills.ts"
   },
   "keywords": [],
   "author": "",
