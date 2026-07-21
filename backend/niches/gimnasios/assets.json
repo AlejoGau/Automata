@@ -1,0 +1,7 @@
+{
+  "niche": "gimnasios",
+  "characters": ["gym_owner", "gym_member"],
+  "backgrounds": ["gym"],
+  "actions": ["workout"],
+  "objects": ["dumbbell", "membership_card", "class_schedule"]
+}
