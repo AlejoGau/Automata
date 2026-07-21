@@ -3,6 +3,34 @@
 Servicio **aislado** que genera el mp4 final (Remotion + ElevenLabs). Corre aparte del
 backend de WhatsApp para que un render pesado no lo afecte.
 
+---
+
+## ⏸️ DÓNDE QUEDAMOS (retomar acá) — 2026-07-21
+
+**Hecho:**
+- ✅ Todo el código pusheado a `AlejoGau/Automata` ramas `main` + `alejo`.
+- ✅ Servicio `automata-render` **creado** en Easypanel (proyecto turnik).
+  - Fuente: `AlejoGau / Automata`, rama `alejo`, **Ruta de compilación `render-service`**.
+  - Build: **Dockerfile**.
+- ✅ **Variables de entorno cargadas** en el render service (PORT, RENDER_SHARED_SECRET,
+  ELEVENLABS_*, SUPABASE_*, RENDER_BUCKET=renders, REMOTION_CONCURRENCY=2).
+- 🕐 **Build en curso** (primera vez tarda 5-10 min por Chromium + ffmpeg + browser ensure).
+
+**Falta (en este orden):**
+1. **Confirmar que el build terminó**: en `automata-render`, CPU/Memoria dejan de estar en 0 y
+   el log dice `Render service escuchando en :3002`. Si falló → Deployments → últimas líneas.
+2. **Crear el bucket `renders`** en Supabase (Storage → New bucket; puede ser privado).
+3. **Conectar el backend**: en las env del servicio **backend** agregar y hacer **redeploy**:
+   ```
+   RENDER_SERVICE_URL=http://<host-interno-del-render-service>:3002
+   RENDER_SHARED_SECRET=<el MISMO valor que quedó en el env del render service>
+   ```
+   > El `RENDER_SHARED_SECRET` está guardado en el env del render service (Easypanel) — copiá
+   > ese mismo valor al backend. Deben ser idénticos. (Se puede rotar cambiándolo en los dos lados.)
+4. **Probar**: Marketing Studio → Video → generar guion → **Renderizar video** (probar con 15s).
+
+---
+
 ## 1. Crear el servicio en Easypanel
 
 - **New Service → App**, mismo proyecto que el backend.
