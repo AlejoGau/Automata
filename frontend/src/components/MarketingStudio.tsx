@@ -7,6 +7,7 @@ import {
   Share2, HelpCircle, ArrowRight, Check, X, Image, Layers,
   Video, Copy, CheckCircle, AlertCircle, Info, ChevronDown, ChevronUp
 } from "lucide-react";
+import VideoStudio from "@/marketing/VideoStudio";
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 interface BrandProfile {
@@ -385,7 +386,7 @@ function PhoneMockup({ brandProfile, activeContent, activeSlideIndex, nicheBackg
 export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: MarketingStudioProps) {
 
   // — Navigation —
-  const [subSection, setSubSection] = useState<'crear' | 'mis_publicaciones' | 'marca'>('crear');
+  const [subSection, setSubSection] = useState<'crear' | 'mis_publicaciones' | 'marca' | 'video'>('crear');
   const [creationStep, setCreationStep] = useState<1 | 2 | 3>(1);
 
   // — Brand Profile —
@@ -1185,6 +1186,7 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
         <nav className="flex items-center gap-1 bg-neutral-900/60 rounded-xl p-1 border border-neutral-800/50">
           {([
             { key: 'crear', label: 'Crear Post' },
+            { key: 'video', label: 'Video' },
             { key: 'mis_publicaciones', label: 'Mis Posts' },
             { key: 'marca', label: 'Mi Marca' },
           ] as const).map(tab => (
@@ -1210,6 +1212,11 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
           </div>
           <button onClick={() => setDbNotMigrated(false)} className="text-[10px] font-bold hover:underline">Ocultar</button>
         </div>
+      )}
+
+      {/* ════════════════ SECCIÓN: VIDEO ════════════════ */}
+      {subSection === 'video' && (
+        <VideoStudio BACKEND_URL={BACKEND_URL} getHeaders={getHeaders} />
       )}
 
       {/* ════════════════ SECCIÓN: CREAR ════════════════ */}

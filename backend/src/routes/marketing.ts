@@ -1,6 +1,11 @@
 import { Router, Response } from 'express';
+import { readdir } from 'fs/promises';
+import path from 'path';
 import { supabase } from '../supabase.js';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
+import { generateStoryboard } from '../marketing/agent.js';
+
+const NICHES_DIR = process.env.MARKETING_NICHES_DIR || path.resolve(process.cwd(), '..', 'niches');
 
 const router = Router();
 
@@ -686,6 +691,37 @@ Devolvé tu análisis formateado en Markdown de forma limpia y profesional, usan
   } catch (err: any) {
     console.error('Error en analyze-image:', err);
     res.status(500).json({ error: 'Error interno en el servidor al analizar la imagen', details: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// VIDEO STUDIO (storyboard por nicho → preview con Remotion)
+// ─────────────────────────────────────────────────────────────
+
+// Nichos de video disponibles (carpetas en niches/, menos _template)
+router.get('/video/niches', requireAuth, async (_req: AuthenticatedRequest, res: Response) => {
+  try {
+    const entries = await readdir(NICHES_DIR, { withFileTypes: true });
+    const niches = entries.filter((e) => e.isDirectory() && !e.name.startsWith('_')).map((e) => e.name);
+    res.status(200).json({ niches });
+  } catch {
+    res.status(200).json({ niches: [] });
+  }
+});
+
+// Generar un storyboard de video (usa el cerebro: Claude + capa visual)
+router.post('/video/storyboard', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const { topic, niche, durationSeconds, style, language } = req.body || {};
+  if (!topic || !niche) {
+    res.status(400).json({ error: 'Faltan parámetros: topic y niche' });
+    return;
+  }
+  try {
+    const result = await generateStoryboard({ topic, niche, durationSeconds, style, language });
+    res.status(200).json(result);
+  } catch (err: any) {
+    console.error('Error generando storyboard:', err);
+    res.status(500).json({ error: 'No se pudo generar el storyboard', details: err?.message });
   }
 });
 
