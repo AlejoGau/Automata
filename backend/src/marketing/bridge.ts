@@ -11,11 +11,14 @@ function renderVisual(v: Visual): string[] {
     case 'stock': {
       const t = v.treatment;
       const tr = t ? ` (Ken Burns: ${t.kenBurns ?? 'none'}${t.overlay != null ? `, scrim ${t.overlay}` : ''})` : '';
-      return [`- **Visual:** STOCK (Pexels) → buscar: \`${v.stockQuery}\`${tr}`];
+      const L = [`- **Visual:** STOCK (Pexels) → buscar: \`${v.stockQuery}\`${tr}`];
+      if (v.stockAlternatives?.length) L.push(`    - Alternativas: ${v.stockAlternatives.map((q) => `\`${q}\``).join(', ')}`);
+      if (v.overlayComponent) L.push(`    - Overlay: componente \`${v.overlayComponent.type}\`${v.overlayComponent.params ? ` (${JSON.stringify(v.overlayComponent.params)})` : ''}`);
+      return L;
     }
     case 'chat_mockup': {
-      const L = [`- **Visual:** COMPONENTE \`ChatMockup\`${v.unreadBadge != null ? ` (badge no leídos: ${v.unreadBadge})` : ''}`];
-      for (const b of v.bubbles) L.push(`    - [${b.time ?? '--:--'}] ${b.from}: "${b.text}"`);
+      const L = [`- **Visual:** COMPONENTE \`ChatMockup\`${v.unreadBadge != null ? ` (badge no leídos: ${v.unreadBadge})` : ''}${v.typingIndicatorSeconds != null ? ` · "escribiendo…" ${v.typingIndicatorSeconds}s` : ''}`];
+      for (const b of v.bubbles) L.push(`    - [${b.time ?? '--:--'}] ${b.from}${b.status ? ` (${b.status})` : ''}: "${b.text}"`);
       return L;
     }
     case 'dashboard':
@@ -51,10 +54,20 @@ export function storyboardToBrief(sb: Storyboard): string {
     L.push('');
     L.push(`### ${s.id} · ${s.start}s–${s.end}s · _${s.purpose}_`);
     L.push(`- **Voz:** ${s.narration}`);
-    L.push(`- **Texto en pantalla:** ${s.subtitle.replace(/\n/g, '  /  ')}`);
+    L.push(`- **Texto en pantalla:** ${s.subtitle.replace(/\n/g, '  /  ')}${s.subtitleStyle ? ` _(estilo: ${s.subtitleStyle})_` : ''}`);
     L.push(...renderVisual(s.visual));
     L.push(`- **Transición:** ${s.transition}`);
   }
+
+  if (sb.production) {
+    L.push('');
+    L.push('## Producción (reglas como data)');
+    const p = sb.production;
+    if (p.captions) L.push(`- **Captions:** ${JSON.stringify(p.captions)}`);
+    if (p.audio) L.push(`- **Audio:** ${JSON.stringify(p.audio)}`);
+    if (p.timing) L.push(`- **Timing:** ${JSON.stringify(p.timing)}`);
+  }
+
   L.push('');
   L.push('---');
   L.push('## Cómo producirlo en el toolkit');

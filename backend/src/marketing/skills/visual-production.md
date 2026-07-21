@@ -23,13 +23,16 @@ con contenido concreto del nicho.
 - `stockQuery`: **en inglés**, específica y concreta. Pensá qué footage real existe.
   - ✅ "gym owner checking phone between classes", "hairdresser looking at empty appointment book"
   - ❌ "gym" / "success" (genérico → footage random)
+- `stockAlternatives`: 2 queries de respaldo (en inglés) por si la principal no rinde.
 - `treatment.kenBurns`: `zoom_in`/`zoom_out`/`pan_left`/`pan_right`/`none`. `overlay`: 0.3–0.5 (scrim oscuro para que el texto se lea).
+- `overlayComponent` (opcional): componente encima del footage. Ej. `{ "type": "notification_counter", "params": { "count": 12 } }` en el problema, `{ "type": "check" }` en la solución.
 
 ### chat_mockup  (el corazón del "problema" y la "solución")
 - Simula un chat de WhatsApp real del rubro.
 - **problem**: mensajes del `cliente` sin respuesta, con horas que avanzan (muestran la demora) y `unreadBadge` alto.
-- **solution**: el `negocio`/`bot` responde al toque.
-- `bubbles`: `[{ from: "cliente"|"negocio"|"bot", text, time: "HH:MM" }]`. Textos reales y creíbles del rubro.
+- **solution**: el `negocio`/`bot` responde al toque. Usá `typingIndicatorSeconds` (1–2) antes de la respuesta.
+- `bubbles`: `[{ from: "cliente"|"negocio"|"bot", text, time: "HH:MM", status: "sent"|"delivered"|"read" }]`. Textos reales y creíbles.
+- Poné `subtitleStyle: "small_bottom"` para que el caption no tape el teléfono.
 
 ### dashboard
 - `metrics`: 2–4 pares `{ label, value }` creíbles y permitidos por el nicho (nada de cifras garantizadas).

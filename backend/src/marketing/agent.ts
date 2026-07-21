@@ -79,7 +79,11 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
     `- visual.type ∈ ${JSON.stringify(VISUAL_TYPES)}`,
     `- Mapeo recomendado propósito → visual: ${JSON.stringify(PURPOSE_VISUAL_MAP)}`,
     `- transiciones válidas: ${JSON.stringify(TRANSITIONS)}`,
-    '- Para `stock`: stockQuery EN INGLÉS y específica. Para `chat_mockup`: burbujas reales del rubro con horas. Para `dashboard`: métricas creíbles y permitidas. Para `end_card`: headline + CTA aprobado.',
+    '- `stock`: stockQuery EN INGLÉS y específica + `stockAlternatives` (2 queries de respaldo) + `treatment`. Opcional `overlayComponent` (ej. notification_counter en el problema, check en la solución).',
+    '- `chat_mockup`: burbujas reales del rubro con `time` y `status` (sent/delivered/read); usá `typingIndicatorSeconds` antes de la respuesta del negocio; `unreadBadge` en el problema.',
+    '- `dashboard`: métricas creíbles y permitidas. `end_card`: headline + CTA aprobado.',
+    '- En escenas de mockup usá `subtitleStyle: "small_bottom"` para que el caption no tape el teléfono.',
+    '- Agregá un bloque `production` con captions (karaoke), audio (elevenlabs) y timing (anchor: "voice").',
     '',
     '# CONFIGURACIÓN DEL NICHO (NICHE.md)',
     niche.markdown,
@@ -96,12 +100,21 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
       voice: { source: 'generated', audioUrl: null, language: req.language ?? 'es-AR' },
       scenes: [{
         id: 'scene-1', start: 0, end: 3, purpose: 'hook', narration: '...', subtitle: '...', transition: 'cut',
-        visual: { type: 'stock', stockQuery: 'english specific query', treatment: { kenBurns: 'zoom_in', overlay: 0.35 } },
+        visual: {
+          type: 'stock', stockQuery: 'english specific query',
+          stockAlternatives: ['alt query 1', 'alt query 2'],
+          treatment: { kenBurns: 'zoom_in', overlay: 0.35 },
+        },
       }, {
-        id: 'scene-2', start: 3, end: 8, purpose: 'problem', narration: '...', subtitle: '...', transition: 'cut',
-        visual: { type: 'chat_mockup', bubbles: [{ from: 'cliente', text: '...', time: '18:32' }], unreadBadge: 12 },
+        id: 'scene-2', start: 3, end: 8, purpose: 'problem', narration: '...', subtitle: '...',
+        transition: 'cut', subtitleStyle: 'small_bottom',
+        visual: {
+          type: 'chat_mockup', unreadBadge: 12, typingIndicatorSeconds: 1,
+          bubbles: [{ from: 'cliente', text: '...', time: '18:32', status: 'read' }],
+        },
       }],
       cta: { text: 'CTA del nicho', start: 12, end: 15 },
+      production: { captions: { style: 'karaoke', position: 'bottom' }, audio: { voiceProvider: 'elevenlabs' }, timing: { anchor: 'voice' } },
     }, null, 2),
   ].join('\n');
 

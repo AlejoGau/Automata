@@ -8,31 +8,47 @@
  * métricas); el componente es genérico.
  */
 import { z } from 'zod';
-import { LIMITS, VISUAL_STYLES, PURPOSES, VISUAL_TYPES, KEN_BURNS, TRANSITIONS } from './catalog.js';
+import {
+  LIMITS, VISUAL_STYLES, PURPOSES, VISUAL_TYPES, KEN_BURNS, TRANSITIONS,
+  SUBTITLE_STYLES, MESSAGE_STATUS,
+} from './catalog.js';
+
+// Overlay que va ENCIMA de un footage de stock (ej. contador de notificaciones, check).
+export const OverlayComponentSchema = z.object({
+  type: z.string(),                              // "notification_counter" | "check" | ...
+  params: z.record(z.string(), z.any()).optional(),
+});
 
 // ── Bloques visuales (unión discriminada por `type`) ──────────────
 export const StockVisualSchema = z.object({
   type: z.literal('stock'),
   // Query de búsqueda en Pexels, EN INGLÉS y específica (la genera el cerebro).
   stockQuery: z.string().min(3),
+  // Queries alternativas (en inglés) por si la principal no rinde en Pexels.
+  stockAlternatives: z.array(z.string()).optional(),
   treatment: z
     .object({
       kenBurns: z.enum(KEN_BURNS).optional(),
       overlay: z.number().min(0).max(1).optional(), // scrim oscuro para contraste del texto
     })
     .optional(),
+  // Componente animado encima del footage (opcional).
+  overlayComponent: OverlayComponentSchema.optional(),
 });
 
 export const ChatBubbleSchema = z.object({
   from: z.string(),          // "cliente" | "negocio" | "bot" (según el nicho)
   text: z.string().min(1),
   time: z.string().optional(),
+  status: z.enum(MESSAGE_STATUS).optional(),     // tildes: sent/delivered/read
 });
 
 export const ChatMockupVisualSchema = z.object({
   type: z.literal('chat_mockup'),
   bubbles: z.array(ChatBubbleSchema).min(1),
   unreadBadge: z.number().optional(),
+  // Segundos que se muestra el indicador "escribiendo…" antes de la respuesta.
+  typingIndicatorSeconds: z.number().optional(),
 });
 
 export const DashboardVisualSchema = z.object({
@@ -71,7 +87,31 @@ export const SceneSchema = z.object({
   narration: z.string(),
   subtitle: z.string(),
   transition: z.string(),
+  // En mockups conviene "small_bottom" para que el caption no compita con el teléfono.
+  subtitleStyle: z.enum(SUBTITLE_STYLES).optional(),
   visual: VisualSchema,
+});
+
+// Reglas de producción (captions/audio/timing) como DATA, para que el toolkit
+// no dependa de leer bien la prosa del brief.
+export const ProductionSchema = z.object({
+  captions: z
+    .object({
+      style: z.string().optional(),          // ej. "karaoke" | "static"
+      position: z.string().optional(),       // ej. "bottom" | "center"
+      highlightColor: z.string().optional(),
+    })
+    .optional(),
+  audio: z
+    .object({
+      voiceProvider: z.string().optional(),  // ej. "elevenlabs"
+    })
+    .optional(),
+  timing: z
+    .object({
+      anchor: z.string().optional(),         // ej. "voice" (anclar duraciones a la voz)
+    })
+    .optional(),
 });
 
 export const StoryboardSchema = z.object({
@@ -95,6 +135,7 @@ export const StoryboardSchema = z.object({
     start: z.number(),
     end: z.number(),
   }),
+  production: ProductionSchema.optional(),
 });
 
 export type Storyboard = z.infer<typeof StoryboardSchema>;

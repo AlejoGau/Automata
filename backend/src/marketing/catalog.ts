@@ -76,6 +76,15 @@ export type VisualType = (typeof VISUAL_TYPES)[number];
 
 export const KEN_BURNS = ['zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'none'] as const;
 
+// Estilo del subtítulo por escena (en mockups conviene "small_bottom" para no tapar el teléfono).
+export const SUBTITLE_STYLES = ['default', 'small_bottom', 'none'] as const;
+
+// Estado de una burbuja de chat (tildes de WhatsApp).
+export const MESSAGE_STATUS = ['sent', 'delivered', 'read'] as const;
+
+// Overlays que se pueden poner ENCIMA de un footage de stock.
+export const OVERLAY_COMPONENTS = ['notification_counter', 'check', 'none'] as const;
+
 // Mapeo recomendado propósito → tipos visuales válidos (guía para el agente).
 export const PURPOSE_VISUAL_MAP: Record<Purpose, VisualType[]> = {
   hook: ['stock'],
