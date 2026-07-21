@@ -90,9 +90,15 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
   const downloadJson = () => {
     if (!sb) return;
     const slug = (sb.title || sb.projectId || "storyboard")
-      .toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "storyboard";
-    const blob = new Blob([JSON.stringify(sb, null, 2)], { type: "application/json" });
+    // Escapamos no-ASCII (é → é) para que el archivo se lea igual en cualquier
+    // editor/parser sin depender de que interpreten UTF-8 (evita el mojibake en Windows).
+    const json = JSON.stringify(sb, null, 2).replace(
+      /[\u0080-\uffff]/g,
+      (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0")
+    );
+    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
