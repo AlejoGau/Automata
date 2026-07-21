@@ -59,6 +59,32 @@ export const TRANSITIONS = [
 export const CAMERAS = ['wide', 'medium', 'close', 'closeup'];
 export const POSITIONS = ['left', 'center', 'right'];
 
+// ── Capa de PRODUCCIÓN VISUAL (genérica, igual en todos los nichos) ──
+// El propósito de la escena define QUÉ componente visual la muestra; lo que
+// cambia por nicho es solo el contenido (textos de las burbujas, la query, etc.).
+export const PURPOSES = ['hook', 'problem', 'solution', 'benefit', 'cta'] as const;
+export type Purpose = (typeof PURPOSES)[number];
+
+export const VISUAL_TYPES = [
+  'stock',            // footage/foto real de Pexels (con tratamiento)
+  'chat_mockup',      // simulación de chat de WhatsApp (burbujas)
+  'dashboard',        // métricas / panel
+  'end_card',         // placa final con el CTA
+  'screen_recording', // demo / captura de pantalla (cae a stock si no hay)
+] as const;
+export type VisualType = (typeof VISUAL_TYPES)[number];
+
+export const KEN_BURNS = ['zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'none'] as const;
+
+// Mapeo recomendado propósito → tipos visuales válidos (guía para el agente).
+export const PURPOSE_VISUAL_MAP: Record<Purpose, VisualType[]> = {
+  hook: ['stock'],
+  problem: ['chat_mockup', 'stock'],
+  solution: ['chat_mockup', 'screen_recording'],
+  benefit: ['dashboard', 'stock'],
+  cta: ['end_card'],
+};
+
 /** Extensiones que aporta un nicho (assets.json). */
 export interface NicheAssets {
   niche: string;

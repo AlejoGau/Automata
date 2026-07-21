@@ -1,15 +1,12 @@
 /**
- * Cerebro de Marketing Studio (Fase 1): idea + nicho → storyboard validado.
+ * Cerebro de Marketing Studio: idea + nicho → storyboard validado.
  *
- * Orquesta la API de Claude:
- *  1. Resuelve el nicho (NICHE.md + assets.json).
- *  2. Carga las skills (guionista + storyboard) desde Supabase/local.
- *  3. Arma el prompt (reglas globales + límites + catálogo efectivo + nicho + skills).
- *  4. Pide a Claude el storyboard como JSON y lo valida (Zod + catálogo/límites).
- *  5. Si hay errores, hace UNA corrección (maximumStoryboardCorrections = 1).
+ * El storyboard separa dos capas:
+ *   - QUÉ dice (por nicho): dolores, claims, CTAs, tono → NICHE.md
+ *   - CÓMO se ve (genérico): bloque `visual` ejecutable por escena → skill visual-production
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { LIMITS, effectiveCatalog } from './catalog.js';
+import { LIMITS, PURPOSE_VISUAL_MAP, VISUAL_TYPES, TRANSITIONS } from './catalog.js';
 import { StoryboardSchema, Storyboard, validateStoryboard } from './schema.js';
 import { loadNiche } from './niche.js';
 import { loadSkills } from './skills.js';
@@ -63,23 +60,26 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
   }
 
   const niche = await loadNiche(req.niche);
-  const catalog = effectiveCatalog(niche.assets);
-  const skills = await loadSkills(['short-form-scriptwriter', 'scene-storyboard']);
+  const skills = await loadSkills(['short-form-scriptwriter', 'scene-storyboard', 'visual-production']);
 
   const system = [
-    'Sos el director creativo/guionista/storyboard artist de Automata (Marketing Studio).',
+    'Sos el director creativo/guionista/productor de Automata (Marketing Studio).',
     'Convertís una idea en un storyboard de video corto vertical 9:16, claro y consistente.',
     '',
-    '# REGLAS GLOBALES (no negociables)',
-    `- Máximo ${LIMITS.maximumScenes} escenas. Cada escena entre ${LIMITS.minimumSceneDurationSeconds}s y ${LIMITS.maximumSceneDurationSeconds}s.`,
-    `- Subtítulos: máx ${LIMITS.maximumSubtitleLines} líneas, ${LIMITS.maximumSubtitleCharactersPerLine} caracteres por línea.`,
-    `- Máx ${LIMITS.maximumCharactersPerScene} personajes y ${LIMITS.maximumObjectsPerScene} objetos por escena.`,
-    '- Solo recursos del CATÁLOGO EFECTIVO. No inventes nombres de personajes/acciones/fondos/objetos.',
-    '- Solo dolores, beneficios y CTAs del NICHE.md. Nunca claims prohibidos. Honestidad total.',
-    '- Escenas contiguas (sin huecos ni superposiciones); CTA al final.',
+    '# DOS CAPAS (no las mezcles)',
+    '- QUÉ dice el video (por nicho): dolores, beneficios, claims, CTAs, tono → salen SOLO del NICHE.md.',
+    '- CÓMO se ve (genérico): cada escena lleva un bloque `visual` EJECUTABLE, NO personajes actuando.',
     '',
-    '# LÍMITES / CATÁLOGO EFECTIVO (base + nicho)',
-    JSON.stringify({ limits: LIMITS, catalog }, null, 2),
+    '# REGLAS GLOBALES (no negociables)',
+    `- Máximo ${LIMITS.maximumScenes} escenas. Cada una entre ${LIMITS.minimumSceneDurationSeconds}s y ${LIMITS.maximumSceneDurationSeconds}s. Contiguas (sin huecos), CTA al final.`,
+    `- Subtítulos: máx ${LIMITS.maximumSubtitleLines} líneas, ${LIMITS.maximumSubtitleCharactersPerLine} caracteres por línea.`,
+    '- Solo dolores/beneficios/CTAs del NICHE.md. Nunca claims prohibidos. Honestidad total.',
+    '',
+    '# CAPA VISUAL',
+    `- visual.type ∈ ${JSON.stringify(VISUAL_TYPES)}`,
+    `- Mapeo recomendado propósito → visual: ${JSON.stringify(PURPOSE_VISUAL_MAP)}`,
+    `- transiciones válidas: ${JSON.stringify(TRANSITIONS)}`,
+    '- Para `stock`: stockQuery EN INGLÉS y específica. Para `chat_mockup`: burbujas reales del rubro con horas. Para `dashboard`: métricas creíbles y permitidas. Para `end_card`: headline + CTA aprobado.',
     '',
     '# CONFIGURACIÓN DEL NICHO (NICHE.md)',
     niche.markdown,
@@ -88,11 +88,21 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
     skills,
     '',
     '# SALIDA',
-    'Devolvé ÚNICAMENTE el JSON del storyboard (sin markdown, sin texto extra) con esta forma:',
-    '{ projectId, niche, title, objective, audience, durationSeconds, aspectRatio:"9:16", fps:30,',
-    '  style, voice:{source:"generated", audioUrl:null, language}, scenes:[{id,start,end,purpose,',
-    '  narration,subtitle,background,characters:[{id,action,expression,position}],objects,camera,transition}],',
-    '  cta:{text,start,end} }',
+    'Devolvé ÚNICAMENTE el JSON del storyboard (sin markdown, sin texto extra), con esta forma:',
+    JSON.stringify({
+      projectId: 'string', niche: req.niche, title: 'string', objective: 'string', audience: 'string',
+      durationSeconds, aspectRatio: '9:16', fps: 30,
+      style: req.style ?? 'live-action-stock',
+      voice: { source: 'generated', audioUrl: null, language: req.language ?? 'es-AR' },
+      scenes: [{
+        id: 'scene-1', start: 0, end: 3, purpose: 'hook', narration: '...', subtitle: '...', transition: 'cut',
+        visual: { type: 'stock', stockQuery: 'english specific query', treatment: { kenBurns: 'zoom_in', overlay: 0.35 } },
+      }, {
+        id: 'scene-2', start: 3, end: 8, purpose: 'problem', narration: '...', subtitle: '...', transition: 'cut',
+        visual: { type: 'chat_mockup', bubbles: [{ from: 'cliente', text: '...', time: '18:32' }], unreadBadge: 12 },
+      }],
+      cta: { text: 'CTA del nicho', start: 12, end: 15 },
+    }, null, 2),
   ].join('\n');
 
   const user = [
@@ -102,13 +112,13 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
     `Estilo: ${req.style ?? 'live-action-stock'}`,
     `Idioma: ${req.language ?? 'es-AR'}`,
     '',
-    'Generá el storyboard completo respetando todas las reglas.',
+    'Generá el storyboard completo con bloques visual ejecutables, respetando todas las reglas.',
   ].join('\n');
 
   // 1er intento
   let raw = await askModel(system, user);
   let storyboard = StoryboardSchema.parse(extractJson(raw));
-  let result = validateStoryboard(storyboard, niche.assets);
+  let result = validateStoryboard(storyboard);
   let corrected = false;
 
   // 1 corrección permitida
@@ -123,7 +133,7 @@ export async function generateStoryboard(req: StoryboardRequest): Promise<Storyb
     ].join('\n');
     raw = await askModel(system, fix);
     storyboard = StoryboardSchema.parse(extractJson(raw));
-    result = validateStoryboard(storyboard, niche.assets);
+    result = validateStoryboard(storyboard);
   }
 
   return { storyboard, corrected, warnings: result.errors };

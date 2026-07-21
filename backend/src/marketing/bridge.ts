@@ -1,13 +1,33 @@
 /**
  * Puente Automata → claude-code-video-toolkit.
- *
- * El cerebro de Automata (backend) genera el storyboard validado; este puente lo
- * convierte en un "brief" en markdown que se le pasa al toolkit (comando /video)
- * para producir el video (voz, visuales, render). Así cada repo mantiene su rol:
- *   - Automata: la lógica creativa por nicho (el qué).
- *   - toolkit:  la producción del video (el cómo).
+ * Convierte el storyboard en un brief markdown con instrucciones EJECUTABLES
+ * por tipo de visual (componente Remotion / query de stock), no descripciones teatrales.
  */
-import { Storyboard } from './schema.js';
+import { Storyboard, Visual } from './schema.js';
+
+/** Traduce un bloque visual a una instrucción concreta para el toolkit. */
+function renderVisual(v: Visual): string[] {
+  switch (v.type) {
+    case 'stock': {
+      const t = v.treatment;
+      const tr = t ? ` (Ken Burns: ${t.kenBurns ?? 'none'}${t.overlay != null ? `, scrim ${t.overlay}` : ''})` : '';
+      return [`- **Visual:** STOCK (Pexels) → buscar: \`${v.stockQuery}\`${tr}`];
+    }
+    case 'chat_mockup': {
+      const L = [`- **Visual:** COMPONENTE \`ChatMockup\`${v.unreadBadge != null ? ` (badge no leídos: ${v.unreadBadge})` : ''}`];
+      for (const b of v.bubbles) L.push(`    - [${b.time ?? '--:--'}] ${b.from}: "${b.text}"`);
+      return L;
+    }
+    case 'dashboard':
+      return [`- **Visual:** COMPONENTE \`Dashboard\` → métricas: ${v.metrics.map((m) => `${m.label}: ${m.value}`).join(' · ')}`];
+    case 'end_card':
+      return [`- **Visual:** COMPONENTE \`EndCard\` → "${v.headline}" · CTA: "${v.cta}"`];
+    case 'screen_recording':
+      return [`- **Visual:** SCREEN RECORDING → ${v.description}${v.stockQuery ? ` (fallback stock: \`${v.stockQuery}\`)` : ''}`];
+    default:
+      return ['- **Visual:** (desconocido)'];
+  }
+}
 
 /** Convierte un storyboard en un brief markdown listo para el toolkit. */
 export function storyboardToBrief(sb: Storyboard): string {
@@ -26,29 +46,21 @@ export function storyboardToBrief(sb: Storyboard): string {
   L.push('');
   L.push(sb.scenes.map((s) => s.narration).join(' '));
   L.push('');
-  L.push('## Escenas');
+  L.push('## Escenas (con producción visual ejecutable)');
   for (const s of sb.scenes) {
     L.push('');
     L.push(`### ${s.id} · ${s.start}s–${s.end}s · _${s.purpose}_`);
     L.push(`- **Voz:** ${s.narration}`);
     L.push(`- **Texto en pantalla:** ${s.subtitle.replace(/\n/g, '  /  ')}`);
-    L.push(`- **Escenario/fondo:** ${s.background}`);
-    if (s.characters.length) {
-      L.push(
-        `- **Sujetos:** ${s.characters
-          .map((c) => `${c.id} (${c.action}, ${c.expression}, ${c.position})`)
-          .join('; ')}`
-      );
-    }
-    if (s.objects.length) L.push(`- **Objetos:** ${s.objects.join(', ')}`);
-    L.push(`- **Cámara:** ${s.camera} · **Transición:** ${s.transition}`);
+    L.push(...renderVisual(s.visual));
+    L.push(`- **Transición:** ${s.transition}`);
   }
   L.push('');
   L.push('---');
   L.push('## Cómo producirlo en el toolkit');
-  L.push('1. Abrí `claude-code-video-toolkit` en Claude Code.');
-  L.push('2. Corré `/video` y pegá este brief como concepto.');
-  L.push('3. Usá el guion locutado para la voz (ElevenLabs) y cada escena para los visuales.');
+  L.push('- `chat_mockup`/`dashboard`/`end_card` → componentes Remotion (renderizar las burbujas/métricas/CTA tal cual).');
+  L.push('- `stock` → bajar de Pexels con la query exacta y aplicar el tratamiento.');
+  L.push('- Voz: usar el guion locutado (ElevenLabs). Sincronizar subtítulos con timestamps de la voz.');
   L.push('');
   return L.join('\n');
 }
