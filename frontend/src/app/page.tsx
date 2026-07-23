@@ -10,6 +10,7 @@ import {
 import { socket } from "@/lib/socket";
 import { supabase } from "@/lib/supabase";
 import MarketingStudio from "@/components/MarketingStudio";
+import { Modal } from "@/components/ui";
 
 // Interfaces de datos
 interface PipelineStage {
@@ -2094,19 +2095,13 @@ export default function CRMWorkspace() {
       )}
 
       {/* MODAL: AÑADIR LEAD */}
-      {showAddLeadModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
-            <div className="flex justify-between items-center mb-6 pb-3 border-b border-neutral-800">
-              <h3 className="font-bold text-lg text-white">Nuevo Prospecto (Lead)</h3>
-              <button
-                onClick={() => setShowAddLeadModal(false)}
-                className="text-neutral-400 hover:text-neutral-200 text-sm font-semibold bg-neutral-800 hover:bg-neutral-700 w-6 h-6 rounded-full flex items-center justify-center"
-              >
-                &times;
-              </button>
-            </div>
-
+      <Modal
+        open={showAddLeadModal}
+        onClose={() => setShowAddLeadModal(false)}
+        size="md"
+        title={<span className="text-lg">Nuevo Prospecto (Lead)</span>}
+      >
+        <div className="p-6">
             <form onSubmit={handleCreateLead} className="space-y-4">
               <div>
                 <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Nombre del Lead</label>
@@ -2172,33 +2167,27 @@ export default function CRMWorkspace() {
                 </button>
               </div>
             </form>
-          </div>
         </div>
-      )}
+      </Modal>
 
       {/* MODAL: MENSAJE MASIVO */}
-      {showBroadcastModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh]">
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 shrink-0">
-              <div className="flex items-center gap-2">
-                <Megaphone size={16} className="text-orange-400" />
-                <h3 className="font-bold text-white">Mensaje masivo</h3>
-                <span className="text-[10px] px-2 py-0.5 bg-orange-950/40 border border-orange-800/40 text-orange-400 rounded-full font-semibold">
-                  Máx. 5
-                </span>
-              </div>
-              <button
-                onClick={() => !broadcastSending && setShowBroadcastModal(false)}
-                disabled={broadcastSending}
-                className="text-neutral-500 hover:text-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
+      <Modal
+        open={showBroadcastModal}
+        onClose={() => setShowBroadcastModal(false)}
+        size="lg"
+        dismissible={!broadcastSending}
+        overlayClassName="bg-black/70"
+        className="flex flex-col max-h-[90vh]"
+        title={
+          <>
+            <Megaphone size={16} className="text-orange-400" />
+            Mensaje masivo
+            <span className="text-[10px] px-2 py-0.5 bg-orange-950/40 border border-orange-800/40 text-orange-400 rounded-full font-semibold">
+              Máx. 5
+            </span>
+          </>
+        }
+      >
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {/* Selección de leads */}
               <div className="px-6 pt-4 pb-2">
@@ -2326,9 +2315,7 @@ export default function CRMWorkspace() {
                 )}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
     </div>
   );

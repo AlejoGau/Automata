@@ -12,3 +12,4 @@ export {
 } from "./Field";
 export { Card, type CardProps, type CardPadding } from "./Card";
 export { Badge, type BadgeProps, type BadgeTone } from "./Badge";
+export { Modal, type ModalProps, type ModalSize } from "./Modal";

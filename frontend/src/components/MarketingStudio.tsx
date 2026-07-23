@@ -8,7 +8,7 @@ import {
   Video, Copy, CheckCircle, AlertCircle, Info, ChevronDown, ChevronUp
 } from "lucide-react";
 import VideoStudio from "@/marketing/VideoStudio";
-import { Label, Input, Textarea, Select } from "@/components/ui";
+import { Label, Input, Textarea, Select, Button, Modal } from "@/components/ui";
 
 /** Variante compacta de campo usada en las opciones avanzadas y "Mi Marca". */
 const COMPACT_FIELD = "text-xs px-3 py-2.5";
@@ -1157,23 +1157,23 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
       )}
 
       {/* ── Confirm Modal ── */}
-      {confirmModal && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <p className="text-sm text-neutral-200 mb-5 leading-relaxed">{confirmModal.message}</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-semibold transition-all">
-                Cancelar
-              </button>
-              <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-all">
-                Eliminar
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={!!confirmModal}
+        onClose={() => setConfirmModal(null)}
+        size="sm"
+        overlayClassName="z-[9998]"
+        className="p-6"
+      >
+        <p className="text-sm text-neutral-200 mb-5 leading-relaxed">{confirmModal?.message}</p>
+        <div className="flex gap-3 justify-end">
+          <Button variant="secondary" size="sm" className="px-4 py-2 rounded-xl" onClick={() => setConfirmModal(null)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" size="sm" className="px-4 py-2 rounded-xl" onClick={() => { confirmModal?.onConfirm(); setConfirmModal(null); }}>
+            Eliminar
+          </Button>
         </div>
-      )}
+      </Modal>
 
       {/* ── Header ── */}
       <header className="h-14 px-6 border-b border-neutral-800/60 bg-neutral-900/20 backdrop-blur-md flex items-center justify-between shrink-0 z-10">
