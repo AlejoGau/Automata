@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "./cn";
 
@@ -59,6 +60,8 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  // Si el usuario pidió menos movimiento, no animamos (igual que hace el CSS del proyecto).
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => setMounted(true), []);
 
@@ -78,8 +81,6 @@ export function Modal({
       restoreFocusRef.current?.focus?.();
     };
   }, [open]);
-
-  if (!mounted || !open) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
@@ -106,50 +107,68 @@ export function Modal({
     }
   };
 
+  if (!mounted) return null;
+
+  // Misma curva que las animaciones CSS del proyecto, para que se sienta parejo.
+  const EASE = [0.22, 1, 0.36, 1] as const;
+  const dur = reduceMotion ? 0 : 0.18;
+
   return createPortal(
-    <div
-      className={cn(
-        "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4",
-        overlayClassName
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className={cn(
+            "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4",
+            overlayClassName
+          )}
+          onKeyDown={handleKeyDown}
+          onMouseDown={(e) => {
+            // Solo cierra si el click empezó en el fondo, no al arrastrar desde adentro.
+            if (!closeOnBackdrop || !dismissible) return;
+            if (e.target === e.currentTarget) onClose();
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: dur }}
+        >
+          <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            tabIndex={-1}
+            className={cn(
+              "bg-neutral-900 border border-neutral-800 rounded-2xl w-full shadow-2xl outline-none",
+              SIZES[size],
+              className
+            )}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: dur, ease: EASE }}
+          >
+            {title && (
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-b border-neutral-800 shrink-0">
+                <h3 id={titleId} className="font-bold text-white flex items-center gap-2">
+                  {title}
+                </h3>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={!dismissible}
+                  aria-label="Cerrar"
+                  className="text-neutral-500 hover:text-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            )}
+            {children}
+          </motion.div>
+        </motion.div>
       )}
-      onKeyDown={handleKeyDown}
-      onMouseDown={(e) => {
-        // Solo cierra si el click empezó en el fondo, no al arrastrar desde adentro.
-        if (!closeOnBackdrop || !dismissible) return;
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        tabIndex={-1}
-        className={cn(
-          "bg-neutral-900 border border-neutral-800 rounded-2xl w-full shadow-2xl outline-none",
-          SIZES[size],
-          className
-        )}
-      >
-        {title && (
-          <div className="flex justify-between items-center gap-3 px-6 py-4 border-b border-neutral-800 shrink-0">
-            <h3 id={titleId} className="font-bold text-white flex items-center gap-2">
-              {title}
-            </h3>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={!dismissible}
-              aria-label="Cerrar"
-              className="text-neutral-500 hover:text-neutral-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-        {children}
-      </div>
-    </div>,
+    </AnimatePresence>,
     document.body
   );
 }

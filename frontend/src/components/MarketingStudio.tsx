@@ -8,7 +8,7 @@ import {
   Video, Copy, CheckCircle, AlertCircle, Info, ChevronDown, ChevronUp
 } from "lucide-react";
 import VideoStudio from "@/marketing/VideoStudio";
-import { Label, Input, Textarea, Select, Button, Modal } from "@/components/ui";
+import { Label, Input, Textarea, Select, Button, Modal, toast } from "@/components/ui";
 
 /** Variante compacta de campo usada en las opciones avanzadas y "Mi Marca". */
 const COMPACT_FIELD = "text-xs px-3 py-2.5";
@@ -430,8 +430,6 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
   const [visionAnalysis, setVisionAnalysis] = useState("");
 
   // — Toast Notifications —
-  const [toast, setToast] = useState<Toast | null>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // — Confirm Modal —
   const [confirmModal, setConfirmModal] = useState<ConfirmModal | null>(null);
@@ -483,17 +481,14 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
     setVisionAnalysis("");
   }, [activeSlideIndex]);
 
-  // Auto-dismiss toast after 3.5s
-  useEffect(() => {
-    if (!toast) return;
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast(null), 3500);
-    return () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); };
-  }, [toast]);
-
   // ─── Helpers ─────────────────────────────────────────────────────────────
-  const showToast = (message: string, type: Toast['type'] = 'success') =>
-    setToast({ message, type });
+  // Mantiene la API showToast() que ya usa todo el componente, pero ahora
+  // delega en el toast global (sonner) para que el CRM avise siempre igual.
+  const showToast = (message: string, type: Toast['type'] = 'success') => {
+    if (type === 'error') toast.error(message);
+    else if (type === 'info') toast.info(message);
+    else toast.success(message);
+  };
 
   const showConfirm = (message: string, onConfirm: () => void) =>
     setConfirmModal({ message, onConfirm });
@@ -1140,21 +1135,6 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
   // ─── RENDER ──────────────────────────────────────────────────────────────
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-neutral-950/20 text-neutral-100 font-sans">
-
-      {/* ── Toast ── */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl text-xs font-semibold max-w-xs backdrop-blur-lg animate-in slide-in-from-bottom-2 duration-300 ${
-          toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-700/50 text-emerald-300' :
-          toast.type === 'error'   ? 'bg-rose-950/90 border-rose-700/50 text-rose-300' :
-                                     'bg-neutral-900/90 border-neutral-700/50 text-neutral-300'
-        }`}>
-          {toast.type === 'success' && <CheckCircle size={15} />}
-          {toast.type === 'error'   && <AlertCircle size={15} />}
-          {toast.type === 'info'    && <Info size={15} />}
-          <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-1 opacity-50 hover:opacity-100"><X size={13} /></button>
-        </div>
-      )}
 
       {/* ── Confirm Modal ── */}
       <Modal

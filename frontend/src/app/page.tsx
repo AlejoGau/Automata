@@ -10,7 +10,8 @@ import {
 import { socket } from "@/lib/socket";
 import { supabase } from "@/lib/supabase";
 import MarketingStudio from "@/components/MarketingStudio";
-import { Modal } from "@/components/ui";
+import { Modal, toast } from "@/components/ui";
+import { AnimatePresence, motion } from "motion/react";
 
 // Interfaces de datos
 interface PipelineStage {
@@ -453,13 +454,17 @@ export default function CRMWorkspace() {
         const data = await res.json();
         await fetchConversations();
         await fetchLeads();
-        alert(`Sincronización lista: ${data.synced} chats importados (${data.skipped} grupos omitidos).`);
+        toast.success('Sincronización lista', {
+          description: `${data.synced} chats importados (${data.skipped} grupos omitidos).`,
+        });
       } else {
-        alert('No se pudo sincronizar. Revisá la conexión con Evolution API.');
+        toast.error('No se pudo sincronizar', {
+          description: 'Revisá la conexión con Evolution API.',
+        });
       }
     } catch (e) {
       console.error("Error sincronizando chats:", e);
-      alert('Error al sincronizar los chats.');
+      toast.error('Error al sincronizar los chats.');
     } finally {
       setSyncing(false);
     }
@@ -685,7 +690,7 @@ export default function CRMWorkspace() {
       setActiveTab('chats');
       setShowLeadDetails(false);
     } else {
-      alert("No se encontró conversación activa para este lead.");
+      toast.info("No se encontró conversación activa para este lead.");
     }
   };
 
@@ -1741,9 +1746,20 @@ export default function CRMWorkspace() {
                           Arrastra leads aquí
                         </div>
                       ) : (
-                        stageLeads.map(lead => (
-                          <div
+                        <AnimatePresence mode="popLayout" initial={false}>
+                        {stageLeads.map(lead => (
+                          // El wrapper animado lleva el layoutId: al mover el lead de etapa,
+                          // Motion lo desliza hasta su nueva columna en vez de saltar.
+                          <motion.div
                             key={lead.id}
+                            layoutId={`lead-${lead.id}`}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                          >
+                          <div
                             draggable
                             onDragStart={(e) => handleDragStart(e, lead.id)}
                             onClick={() => {
@@ -1775,7 +1791,9 @@ export default function CRMWorkspace() {
                               </button>
                             </div>
                           </div>
-                        ))
+                          </motion.div>
+                        ))}
+                        </AnimatePresence>
                       )}
                     </div>
                   </div>
@@ -2278,7 +2296,7 @@ export default function CRMWorkspace() {
                 <div className="px-6 pb-4 space-y-1.5">
                   <p className="text-xs font-semibold text-neutral-400 mb-2">Resultados del envío</p>
                   {broadcastResults.map((r, i) => (
-                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${r.status === 'sent' ? 'bg-green-950/30 border border-green-800/40 text-green-400' : 'bg-red-950/30 border border-red-800/40 text-red-400'}`}>
+                    <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${r.status === 'sent' ? 'bg-emerald-950/30 border border-emerald-800/40 text-emerald-400' : 'bg-rose-950/30 border border-rose-800/40 text-rose-400'}`}>
                       {r.status === 'sent' ? <Check size={12} /> : <X size={12} />}
                       <span className="font-semibold">{r.name}</span>
                       <span className="text-neutral-500 font-mono">+{r.phone}</span>
