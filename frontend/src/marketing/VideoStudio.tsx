@@ -5,6 +5,7 @@ import { Player } from "@remotion/player";
 import { Sparkles, Loader2, AlertCircle, Film, Plus, X, Play, Download } from "lucide-react";
 import { VideoComposition } from "./VideoComposition";
 import type { SceneData, Bubble } from "./SceneRenderer";
+import { Button, Card, Badge, Label, Input, Textarea, Select } from "@/components/ui";
 
 interface Storyboard {
   projectId: string;
@@ -188,7 +189,6 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
     });
   };
 
-  const inputStyle = "w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600 transition-colors";
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden relative z-10">
@@ -196,83 +196,88 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
       <header className="h-16 px-6 border-b border-neutral-800/60 bg-neutral-900/20 backdrop-blur-md flex items-center gap-3 shrink-0">
         <Film size={18} className="text-orange-400" />
         <span className="font-bold text-lg text-white">Video Studio</span>
-        <span className="text-[10px] px-2 py-1 rounded bg-orange-950/40 border border-orange-900/40 text-orange-400 select-none">
-          Storyboard + Preview
-        </span>
+        <Badge>Storyboard + Preview</Badge>
         {sb && (
           <div className="ml-auto flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={downloadJson}
               title="Descargar el guion + storyboard (JSON) para el render"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-neutral-800/60 border border-neutral-700 text-neutral-200 hover:bg-neutral-700/60 hover:text-white transition-all"
             >
               <Download size={14} /> Descargar guion
-            </button>
-            <button
+            </Button>
+            <Button
+              size="sm"
               onClick={renderVideo}
               disabled={rendering}
               title="Generar el video mp4 final (voz + subtítulos + footage) en el server"
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white shadow-md shadow-orange-500/15 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {rendering ? <Loader2 size={14} className="animate-spin" /> : <Film size={14} />}
               {rendering ? "Renderizando…" : "Renderizar video"}
-            </button>
+            </Button>
           </div>
         )}
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
         {/* Formulario */}
-        <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-2xl p-5 mb-6 backdrop-blur-md">
+        <Card className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 items-end">
             <div>
-              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Idea del video</label>
-              <input
+              <Label htmlFor="video-topic">Idea del video</Label>
+              <Input
+                id="video-topic"
                 type="text"
                 placeholder="Ej: Perdés alumnos por responder tarde los mensajes"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                className={inputStyle}
               />
             </div>
             <div>
-              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Nicho</label>
-              <select value={niche} onChange={(e) => setNiche(e.target.value)} className={`${inputStyle} min-w-[160px]`}>
+              <Label htmlFor="video-niche">Nicho</Label>
+              <Select
+                id="video-niche"
+                value={niche}
+                onChange={(e) => setNiche(e.target.value)}
+                className="min-w-[160px]"
+              >
                 {niches.length === 0 && <option value="">(sin nichos)</option>}
                 {niches.map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
-              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Duración</label>
+              <Label>Duración</Label>
               <div className="flex gap-1">
                 {DURATIONS.map((d) => (
-                  <button
+                  <Button
                     key={d}
+                    size="sm"
+                    variant={duration === d ? "primary" : "secondary"}
+                    aria-pressed={duration === d}
                     onClick={() => setDuration(d)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
-                      duration === d ? "bg-orange-600 text-white" : "bg-neutral-950/60 border border-neutral-800 text-neutral-400 hover:text-neutral-200"
-                    }`}
-                  >{d}s</button>
+                    className="py-2"
+                  >{d}s</Button>
                 ))}
               </div>
             </div>
           </div>
-          <button
+          <Button
             onClick={generate}
             disabled={loading || !topic.trim() || !niche}
-            className="mt-4 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-xl text-sm font-semibold shadow-md shadow-orange-500/15 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="mt-4"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
             {loading ? "Generando guion…" : "Generar video"}
-          </button>
+          </Button>
           {error && (
             <div className="mt-3 p-3 bg-rose-950/40 border border-rose-900/40 rounded-xl text-rose-400 text-xs flex items-center gap-2">
               <AlertCircle size={14} /> {error}
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Resultado: preview + editor */}
         {sb && (
@@ -346,41 +351,44 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
             {/* Editor de escenas */}
             <div className="space-y-4">
               {sb.scenes.map((s) => (
-                <div key={s.id} className="bg-neutral-900/40 border border-neutral-800/60 rounded-2xl p-4 backdrop-blur-md">
+                <Card key={s.id} padding="sm">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-orange-950/40 border border-orange-900/40 text-orange-400 font-semibold">
-                      {PURPOSE_LABEL[s.purpose] || s.purpose}
-                    </span>
+                    <Badge className="py-0.5">{PURPOSE_LABEL[s.purpose] || s.purpose}</Badge>
                     <span className="text-[10px] text-neutral-500 font-mono">{s.start}s–{s.end}s</span>
                     <span className="text-[10px] text-neutral-600">· {s.visual.type}</span>
                   </div>
 
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Narración (voz)</label>
-                  <textarea rows={2} value={s.narration} onChange={(e) => patchScene(s.id, { narration: e.target.value })} className={`${inputStyle} resize-none mb-3`} />
+                  <Label htmlFor={`${s.id}-narration`}>Narración (voz)</Label>
+                  <Textarea id={`${s.id}-narration`} rows={2} value={s.narration} onChange={(e) => patchScene(s.id, { narration: e.target.value })} className="mb-3" />
 
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Subtítulo</label>
-                  <textarea rows={2} value={s.subtitle} onChange={(e) => patchScene(s.id, { subtitle: e.target.value })} className={`${inputStyle} resize-none mb-3`} />
+                  <Label htmlFor={`${s.id}-subtitle`}>Subtítulo</Label>
+                  <Textarea id={`${s.id}-subtitle`} rows={2} value={s.subtitle} onChange={(e) => patchScene(s.id, { subtitle: e.target.value })} className="mb-3" />
 
                   {/* Editor por tipo visual */}
                   {s.visual.type === "stock" && (
                     <div>
-                      <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Búsqueda de stock (inglés)</label>
-                      <input value={s.visual.stockQuery} onChange={(e) => patchVisual(s.id, { stockQuery: e.target.value })} className={inputStyle} />
+                      <Label htmlFor={`${s.id}-stock`}>Búsqueda de stock (inglés)</Label>
+                      <Input id={`${s.id}-stock`} value={s.visual.stockQuery} onChange={(e) => patchVisual(s.id, { stockQuery: e.target.value })} />
                     </div>
                   )}
 
                   {s.visual.type === "chat_mockup" && (
                     <div>
-                      <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Burbujas del chat</label>
+                      <Label className="mb-1.5">Burbujas del chat</Label>
                       <div className="space-y-2">
                         {s.visual.bubbles.map((b, i) => (
                           <div key={i} className="flex gap-2 items-center">
-                            <select value={b.from} onChange={(e) => patchBubble(s.id, i, { from: e.target.value })} className="bg-neutral-950/60 border border-neutral-800 text-neutral-300 text-xs px-2 py-1.5 rounded-lg">
+                            <Select
+                              aria-label="Quién habla"
+                              value={b.from}
+                              onChange={(e) => patchBubble(s.id, i, { from: e.target.value })}
+                              className="w-auto text-xs px-2 py-1.5"
+                            >
                               <option value="cliente">cliente</option>
                               <option value="negocio">negocio</option>
-                            </select>
-                            <input value={b.text} onChange={(e) => patchBubble(s.id, i, { text: e.target.value })} className={`${inputStyle} flex-1`} />
-                            <input value={b.time || ""} onChange={(e) => patchBubble(s.id, i, { time: e.target.value })} className="w-16 bg-neutral-950/60 border border-neutral-800 text-neutral-300 text-xs px-2 py-1.5 rounded-lg text-center" placeholder="hh:mm" />
+                            </Select>
+                            <Input aria-label="Texto del mensaje" value={b.text} onChange={(e) => patchBubble(s.id, i, { text: e.target.value })} className="flex-1" />
+                            <Input aria-label="Hora" value={b.time || ""} onChange={(e) => patchBubble(s.id, i, { time: e.target.value })} className="w-16 text-xs px-2 py-1.5 text-center" placeholder="hh:mm" />
                           </div>
                         ))}
                       </div>
@@ -389,18 +397,18 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
 
                   {s.visual.type === "dashboard" && (
                     <div>
-                      <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Métricas</label>
+                      <Label className="mb-1.5">Métricas</Label>
                       <div className="grid grid-cols-2 gap-2">
                         {s.visual.metrics.map((m, i) => (
                           <div key={i} className="flex gap-1">
-                            <input value={m.value} onChange={(e) => {
+                            <Input aria-label="Valor" value={m.value} onChange={(e) => {
                               const metrics = (s.visual as any).metrics.map((mm: any, mi: number) => mi === i ? { ...mm, value: e.target.value } : mm);
                               patchVisual(s.id, { metrics });
-                            }} className="w-16 bg-neutral-950/60 border border-neutral-800 text-orange-400 font-bold text-xs px-2 py-1.5 rounded-lg text-center" />
-                            <input value={m.label} onChange={(e) => {
+                            }} className="w-16 text-orange-400 font-bold text-xs px-2 py-1.5 text-center" />
+                            <Input aria-label="Etiqueta" value={m.label} onChange={(e) => {
                               const metrics = (s.visual as any).metrics.map((mm: any, mi: number) => mi === i ? { ...mm, label: e.target.value } : mm);
                               patchVisual(s.id, { metrics });
-                            }} className={`${inputStyle} flex-1`} />
+                            }} className="flex-1" />
                           </div>
                         ))}
                       </div>
@@ -410,16 +418,16 @@ export default function VideoStudio({ BACKEND_URL, getHeaders }: VideoStudioProp
                   {s.visual.type === "end_card" && (
                     <div className="space-y-2">
                       <div>
-                        <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Título</label>
-                        <input value={s.visual.headline} onChange={(e) => patchVisual(s.id, { headline: e.target.value })} className={inputStyle} />
+                        <Label htmlFor={`${s.id}-headline`}>Título</Label>
+                        <Input id={`${s.id}-headline`} value={s.visual.headline} onChange={(e) => patchVisual(s.id, { headline: e.target.value })} />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">CTA</label>
-                        <input value={s.visual.cta} onChange={(e) => patchVisual(s.id, { cta: e.target.value })} className={inputStyle} />
+                        <Label htmlFor={`${s.id}-cta`}>CTA</Label>
+                        <Input id={`${s.id}-cta`} value={s.visual.cta} onChange={(e) => patchVisual(s.id, { cta: e.target.value })} />
                       </div>
                     </div>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           </div>
