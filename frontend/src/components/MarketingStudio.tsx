@@ -8,6 +8,10 @@ import {
   Video, Copy, CheckCircle, AlertCircle, Info, ChevronDown, ChevronUp
 } from "lucide-react";
 import VideoStudio from "@/marketing/VideoStudio";
+import { Label, Input, Textarea, Select } from "@/components/ui";
+
+/** Variante compacta de campo usada en las opciones avanzadas y "Mi Marca". */
+const COMPACT_FIELD = "text-xs px-3 py-2.5";
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 interface BrandProfile {
@@ -1320,49 +1324,45 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
                 {/* Formulario principal */}
                 <form onSubmit={handleGenerate} className="space-y-5">
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Rubro (editable)</label>
-                    <input type="text"
+                    <Label htmlFor="ms-industry" className="mb-1.5">Rubro (editable)</Label>
+                    <Input id="ms-industry" fieldSize="md" type="text"
                       placeholder="Ej: Gimnasio, Inmobiliaria, Restaurante..."
                       value={formData.industry}
                       onChange={(e) => setFormData(prev => ({ ...prev, industry: e.target.value }))}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Oferta o Mensaje Principal</label>
-                    <textarea required
+                    <Label htmlFor="ms-offer" className="mb-1.5">Oferta o Mensaje Principal</Label>
+                    <Textarea id="ms-offer" fieldSize="md" required
                       placeholder="Ej: 20% de descuento en la matrícula durante Julio."
                       value={formData.offer}
                       onChange={(e) => setFormData(prev => ({ ...prev, offer: e.target.value }))}
                       rows={3}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-orange-600 resize-none transition-colors"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Objetivo</label>
-                      <select value={formData.goal}
-                        onChange={(e) => setFormData(prev => ({ ...prev, goal: e.target.value }))}
-                        className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-orange-600">
+                      <Label htmlFor="ms-goal" className="mb-1.5">Objetivo</Label>
+                      <Select id="ms-goal" fieldSize="md" value={formData.goal}
+                        onChange={(e) => setFormData(prev => ({ ...prev, goal: e.target.value }))}>
                         <option>Conseguir leads</option>
                         <option>Promocionar oferta</option>
                         <option>Mostrar testimonios</option>
                         <option>Tips educativos</option>
-                      </select>
+                      </Select>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Tono</label>
-                      <select value={formData.tone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, tone: e.target.value }))}
-                        className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-4 py-3 rounded-xl focus:outline-none focus:border-orange-600">
+                      <Label htmlFor="ms-tone" className="mb-1.5">Tono</Label>
+                      <Select id="ms-tone" fieldSize="md" value={formData.tone}
+                        onChange={(e) => setFormData(prev => ({ ...prev, tone: e.target.value }))}>
                         <option>Motivador</option>
                         <option>Profesional</option>
                         <option>Divertido</option>
                         <option>Urgente</option>
                         <option>Premium</option>
-                      </select>
+                      </Select>
                     </div>
                   </div>
 
@@ -1376,59 +1376,53 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
                     {showAdvanced && (
                       <div className="p-4 border-t border-neutral-800 space-y-4 bg-neutral-950/30">
                         <div>
-                          <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Nombre de Campaña (CRM)</label>
-                          <input type="text" placeholder="Ej: Promo Julio 2025"
+                          <Label htmlFor="ms-title">Nombre de Campaña (CRM)</Label>
+                          <Input id="ms-title" fieldSize="md" className={COMPACT_FIELD} type="text" placeholder="Ej: Promo Julio 2025"
                             value={formData.title}
                             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                            className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Beneficios (opcional)</label>
-                          <textarea placeholder="Ej: Seguimiento continuo, entrenadores certificados."
+                          <Label htmlFor="ms-benefits">Beneficios (opcional)</Label>
+                          <Textarea id="ms-benefits" fieldSize="md" className={COMPACT_FIELD} placeholder="Ej: Seguimiento continuo, entrenadores certificados."
                             value={formData.benefits}
                             onChange={(e) => setFormData(prev => ({ ...prev, benefits: e.target.value }))}
                             rows={2}
-                            className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 placeholder-neutral-600 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 resize-none transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Llamado a la Acción (CTA)</label>
-                          <input type="text"
+                          <Label htmlFor="ms-cta">Llamado a la Acción (CTA)</Label>
+                          <Input id="ms-cta" fieldSize="md" className={COMPACT_FIELD} type="text"
                             value={formData.cta}
                             onChange={(e) => setFormData(prev => ({ ...prev, cta: e.target.value }))}
-                            className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Formato</label>
-                            <select value={formData.format}
-                              onChange={(e) => setFormData(prev => ({ ...prev, format: e.target.value }))}
-                              className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600">
+                            <Label htmlFor="ms-format">Formato</Label>
+                            <Select id="ms-format" fieldSize="md" className={COMPACT_FIELD} value={formData.format}
+                              onChange={(e) => setFormData(prev => ({ ...prev, format: e.target.value }))}>
                               <option value="1080x1350">Vertical 4:5 (Feed)</option>
                               <option value="1080x1080">Cuadrado 1:1</option>
                               <option value="1080x1920">Story / Reel 9:16</option>
                               <option value="1200x630">Horizontal 1.91:1</option>
-                            </select>
+                            </Select>
                           </div>
                           {formData.contentType === 'carrusel' && (
                             <div>
-                              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Nº de Slides</label>
-                              <input type="number" min={3} max={10}
+                              <Label htmlFor="ms-slides">Nº de Slides</Label>
+                              <Input id="ms-slides" fieldSize="md" className={COMPACT_FIELD} type="number" min={3} max={10}
                                 value={formData.slidesCount}
                                 onChange={(e) => setFormData(prev => ({ ...prev, slidesCount: parseInt(e.target.value) || 5 }))}
-                                className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none"
                               />
                             </div>
                           )}
                           {formData.contentType === 'reel' && (
                             <div>
-                              <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Duración (seg.)</label>
-                              <input type="number" min={5} max={60}
+                              <Label htmlFor="ms-duration">Duración (seg.)</Label>
+                              <Input id="ms-duration" fieldSize="md" className={COMPACT_FIELD} type="number" min={5} max={60}
                                 value={formData.duration}
                                 onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 15 }))}
-                                className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none"
                               />
                             </div>
                           )}
@@ -1506,28 +1500,32 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">Título principal</label>
-                    <textarea
+                    <Label htmlFor="slide-title">Título principal</Label>
+                    <Textarea
+                      id="slide-title"
+                      fieldSize="md"
+                      className="px-3 py-2.5"
                       value={activeContent.content_type === 'carrusel'
                         ? activeContent.slides_json[activeSlideIndex]?.title || ''
                         : activeContent.slides_json[activeSlideIndex]?.textOnScreen || ''}
                       onChange={(e) => handleUpdateSlideField('title', e.target.value)}
                       rows={3}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 resize-none transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
+                    <Label htmlFor="slide-subtitle">
                       {activeContent.content_type === 'carrusel' ? 'Subtítulo' : 'Locución (Voz en off)'}
-                    </label>
-                    <textarea
+                    </Label>
+                    <Textarea
+                      id="slide-subtitle"
+                      fieldSize="md"
+                      className="px-3 py-2.5"
                       value={activeContent.content_type === 'carrusel'
                         ? activeContent.slides_json[activeSlideIndex]?.subtitle || ''
                         : activeContent.slides_json[activeSlideIndex]?.voiceOver || ''}
                       onChange={(e) => handleUpdateSlideField('subtitle', e.target.value)}
                       rows={2}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 resize-none transition-colors"
                     />
                   </div>
 
@@ -1565,11 +1563,13 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
                   <h5 className="font-semibold text-xs text-neutral-300 flex items-center gap-1.5">
                     <Share2 size={12} className="text-orange-500" /> Caption del Post
                   </h5>
-                  <textarea
+                  <Textarea
+                    aria-label="Caption del post"
+                    fieldSize="md"
+                    className={COMPACT_FIELD}
                     value={activeContent.caption}
                     onChange={(e) => setActiveContent({ ...activeContent, caption: e.target.value })}
                     rows={4}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 resize-none transition-colors"
                   />
                   <div className="flex flex-wrap gap-1.5">
                     {activeContent.hashtags_json?.map((tag, i) => (
@@ -1790,19 +1790,17 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
               <form onSubmit={saveBrandProfile} className="space-y-4 bg-neutral-900/30 border border-neutral-800/80 rounded-2xl p-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Nombre Comercial</label>
-                    <input type="text" required placeholder="Ej: PowerFit Gym"
+                    <Label htmlFor="brand-name" className="mb-1.5">Nombre Comercial</Label>
+                    <Input id="brand-name" fieldSize="md" className={COMPACT_FIELD} type="text" required placeholder="Ej: PowerFit Gym"
                       value={brandProfile.business_name}
                       onChange={(e) => setBrandProfile(prev => ({ ...prev, business_name: e.target.value }))}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Rubro por Defecto</label>
-                    <input type="text" placeholder="Ej: Gimnasio"
+                    <Label htmlFor="brand-industry" className="mb-1.5">Rubro por Defecto</Label>
+                    <Input id="brand-industry" fieldSize="md" className={COMPACT_FIELD} type="text" placeholder="Ej: Gimnasio"
                       value={brandProfile.industry}
                       onChange={(e) => setBrandProfile(prev => ({ ...prev, industry: e.target.value }))}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                     />
                   </div>
                 </div>
@@ -1828,42 +1826,38 @@ export default function MarketingStudio({ session, BACKEND_URL, getHeaders }: Ma
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">WhatsApp (con código)</label>
-                    <input type="text" placeholder="Ej: 5491162838106"
+                    <Label htmlFor="brand-whatsapp" className="mb-1.5">WhatsApp (con código)</Label>
+                    <Input id="brand-whatsapp" fieldSize="md" className={COMPACT_FIELD} type="text" placeholder="Ej: 5491162838106"
                       value={brandProfile.whatsapp}
                       onChange={(e) => setBrandProfile(prev => ({ ...prev, whatsapp: e.target.value.replace(/\D/g, '') }))}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Sitio Web</label>
-                    <input type="text" placeholder="www.minegocio.com"
+                    <Label htmlFor="brand-website" className="mb-1.5">Sitio Web</Label>
+                    <Input id="brand-website" fieldSize="md" className={COMPACT_FIELD} type="text" placeholder="www.minegocio.com"
                       value={brandProfile.website}
                       onChange={(e) => setBrandProfile(prev => ({ ...prev, website: e.target.value }))}
-                      className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">Tono de Comunicación</label>
-                  <select value={brandProfile.default_tone}
-                    onChange={(e) => setBrandProfile(prev => ({ ...prev, default_tone: e.target.value }))}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600">
+                  <Label htmlFor="brand-tone" className="mb-1.5">Tono de Comunicación</Label>
+                  <Select id="brand-tone" fieldSize="md" className={COMPACT_FIELD} value={brandProfile.default_tone}
+                    onChange={(e) => setBrandProfile(prev => ({ ...prev, default_tone: e.target.value }))}>
                     <option>Motivador</option>
                     <option>Profesional</option>
                     <option>Divertido</option>
                     <option>Urgente</option>
                     <option>Premium</option>
-                  </select>
+                  </Select>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1.5">URL del Logo (opcional)</label>
-                  <input type="text" placeholder="https://ejemplo.com/logo.png"
+                  <Label htmlFor="brand-logo" className="mb-1.5">URL del Logo (opcional)</Label>
+                  <Input id="brand-logo" fieldSize="md" className={COMPACT_FIELD} type="text" placeholder="https://ejemplo.com/logo.png"
                     value={brandProfile.logo_url}
                     onChange={(e) => setBrandProfile(prev => ({ ...prev, logo_url: e.target.value }))}
-                    className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-xs px-3 py-2.5 rounded-xl focus:outline-none focus:border-orange-600 transition-colors"
                   />
                 </div>
 
