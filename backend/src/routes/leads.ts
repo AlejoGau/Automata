@@ -35,6 +35,49 @@ router.get('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =>
   }
 });
 
+// Etapas reales del embudo del workspace.
+// El frontend las necesita para filtrar por el stage_id verdadero (UUID): antes
+// tenía las etapas hardcodeadas como "stage-1".."stage-5" y no matcheaba nada.
+// Si el workspace todavía no tiene etapas, las siembra (mismo criterio que POST /).
+router.get('/stages', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const user = req.user!;
+
+  try {
+    const { data: stages, error } = await supabase
+      .from('pipeline_stages')
+      .select('id, name, order')
+      .eq('workspace_id', user.workspace_id)
+      .order('order', { ascending: true });
+
+    if (error) throw error;
+
+    if (stages && stages.length > 0) {
+      res.status(200).json(stages);
+      return;
+    }
+
+    const defaults = [
+      { name: 'Nuevo', order: 1, workspace_id: user.workspace_id },
+      { name: 'Contactado', order: 2, workspace_id: user.workspace_id },
+      { name: 'En Negociación', order: 3, workspace_id: user.workspace_id },
+      { name: 'Ganado', order: 4, workspace_id: user.workspace_id },
+      { name: 'Perdido', order: 5, workspace_id: user.workspace_id }
+    ];
+
+    const { data: created, error: createError } = await supabase
+      .from('pipeline_stages')
+      .insert(defaults)
+      .select('id, name, order');
+
+    if (createError) throw createError;
+
+    res.status(200).json((created || []).sort((a, b) => a.order - b.order));
+  } catch (error: any) {
+    console.error('Error al obtener etapas:', error);
+    res.status(500).json({ error: 'Error al obtener etapas', details: error.message });
+  }
+});
+
 // Crear un nuevo lead (Dentro del workspace del agente)
 router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const { name, phone, source, stageId } = req.body;

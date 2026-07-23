@@ -52,13 +52,28 @@ interface Message {
 type TabType = 'chats' | 'leads' | 'dashboard' | 'marketing' | 'settings';
 type SearchType = 'contacts' | 'messages';
 
-const STAGES = [
-  { id: "stage-1", name: "Nuevo", color: "border-blue-500/20 text-blue-400 bg-blue-500/5 hover:bg-blue-500/10" },
-  { id: "stage-2", name: "Contactado", color: "border-amber-500/20 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10" },
-  { id: "stage-3", name: "En Negociación", color: "border-orange-500/20 text-orange-400 bg-orange-500/5 hover:bg-orange-500/10" },
-  { id: "stage-4", name: "Ganado", color: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10" },
-  { id: "stage-5", name: "Perdido", color: "border-rose-500/20 text-rose-400 bg-rose-500/5 hover:bg-rose-500/10" }
-];
+/**
+ * Etapa real del embudo (tabla pipeline_stages). Los ids son UUIDs que vienen
+ * de la base: NO se hardcodean. Antes estaban fijos como "stage-1".."stage-5"
+ * y no coincidían con el stage_id de los leads, así que el embudo salía vacío.
+ */
+interface Stage {
+  id: string;
+  name: string;
+  order: number;
+}
+
+// El color se asigna por nombre de etapa, para que el look no dependa del id.
+const STAGE_COLORS: Record<string, string> = {
+  "Nuevo": "border-blue-500/20 text-blue-400 bg-blue-500/5 hover:bg-blue-500/10",
+  "Contactado": "border-amber-500/20 text-amber-400 bg-amber-500/5 hover:bg-amber-500/10",
+  "En Negociación": "border-orange-500/20 text-orange-400 bg-orange-500/5 hover:bg-orange-500/10",
+  "Ganado": "border-emerald-500/20 text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10",
+  "Perdido": "border-rose-500/20 text-rose-400 bg-rose-500/5 hover:bg-rose-500/10",
+};
+
+const stageColor = (name: string) =>
+  STAGE_COLORS[name] ?? "border-neutral-700/30 text-neutral-400 bg-neutral-500/5 hover:bg-neutral-500/10";
 
 interface QuickReply {
   id: string;
@@ -203,6 +218,7 @@ export default function CRMWorkspace() {
 
   // Pipeline Kanban
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [stages, setStages] = useState<Stage[]>([]);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [leadSearchTerm, setLeadSearchTerm] = useState<string>("");
   const [showLeadDetails, setShowLeadDetails] = useState<boolean>(false);
@@ -301,6 +317,7 @@ export default function CRMWorkspace() {
     if (session) {
       fetchConversations();
       fetchLeads();
+      fetchStages();
     }
   }, [session]);
 
@@ -482,6 +499,19 @@ export default function CRMWorkspace() {
     }
   };
 
+  // Etapas reales del embudo (con sus UUIDs). Sin esto el pipeline sale vacío.
+  const fetchStages = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/leads/stages`, { headers: getHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setStages(data);
+      }
+    } catch (e) {
+      console.error("Error cargando etapas:", e);
+    }
+  };
+
   const fetchMessages = async (convoId: string) => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/conversations/${convoId}/messages`, { headers: getHeaders() });
@@ -643,9 +673,14 @@ export default function CRMWorkspace() {
       if (res.ok) {
         fetchLeads();
         fetchConversations();
+      } else {
+        // Antes esto fallaba en silencio: el lead volvía a su lugar sin explicación.
+        const data = await res.json().catch(() => ({}));
+        toast.error('No se pudo mover el lead', { description: data?.error || `Error ${res.status}` });
       }
     } catch (err) {
       console.error("Error moviendo lead:", err);
+      toast.error('No se pudo mover el lead', { description: 'Fallo de conexión con el servidor.' });
     }
   };
 
@@ -1372,7 +1407,7 @@ export default function CRMWorkspace() {
                       .map(convo => {
                         const active = selectedConvoId === convo.id;
                         const assigned = convo.assigned_agent_id;
-                        const stage = STAGES.find(s => s.id === convo.leads?.stage_id);
+                        const stage = stages.find(s => s.id === convo.leads?.stage_id);
 
                         return (
                           <div
@@ -1493,9 +1528,9 @@ export default function CRMWorkspace() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm">{getLeadDisplay(currentConvo.leads).title}</span>
-                          {STAGES.find(s => s.id === currentConvo.leads?.stage_id) && (
+                          {stages.find(s => s.id === currentConvo.leads?.stage_id) && (
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/30 border border-amber-900/50 text-amber-400 font-medium">
-                              {STAGES.find(s => s.id === currentConvo.leads?.stage_id)?.name}
+                              {stages.find(s => s.id === currentConvo.leads?.stage_id)?.name}
                             </span>
                           )}
                         </div>
@@ -1719,7 +1754,17 @@ export default function CRMWorkspace() {
             </header>
 
             <div className="flex-1 p-6 overflow-x-auto flex gap-4 bg-neutral-950/20 select-none custom-scrollbar">
-              {STAGES.map(stage => {
+              {stages.length === 0 && (
+                <div className="flex-1 flex flex-col items-center justify-center text-center text-neutral-500 gap-2">
+                  <Layers size={32} className="opacity-40" />
+                  <p className="text-sm font-semibold text-neutral-400">No se pudieron cargar las etapas del embudo</p>
+                  <p className="text-xs max-w-sm">
+                    El backend no respondió <code className="text-neutral-400">/api/leads/stages</code>. Si acabás de actualizar,
+                    puede que falte redesplegarlo.
+                  </p>
+                </div>
+              )}
+              {stages.map(stage => {
                 const stageLeads = leads
                   .filter(l => l.stage_id === stage.id)
                   .filter(l => l.name.toLowerCase().includes(leadSearchTerm.toLowerCase()));
@@ -1729,7 +1774,7 @@ export default function CRMWorkspace() {
                     key={stage.id}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, stage.id)}
-                    className={`w-72 md:w-80 shrink-0 flex flex-col bg-neutral-900/20 border border-neutral-800/40 rounded-2xl p-4 transition-all duration-300 ${stage.color}`}
+                    className={`w-72 md:w-80 shrink-0 flex flex-col bg-neutral-900/20 border border-neutral-800/40 rounded-2xl p-4 transition-all duration-300 ${stageColor(stage.name)}`}
                   >
                     <div className="flex items-center justify-between mb-4 shrink-0 pb-2 border-b border-neutral-800/30">
                       <span className="font-semibold text-sm text-neutral-200 flex items-center gap-1.5">
@@ -1885,7 +1930,7 @@ export default function CRMWorkspace() {
                     </h3>
                     
                     <div className="space-y-3 pt-2">
-                      {STAGES.map(stage => {
+                      {stages.map(stage => {
                         const count = dashboardStats.leadsByStage[stage.id] || 0;
                         const percentage = dashboardStats.leadsCount > 0 
                           ? Math.round((count / dashboardStats.leadsCount) * 100) 
@@ -2083,7 +2128,7 @@ export default function CRMWorkspace() {
               <label className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider block mb-1">Etapa Comercial</label>
               <div className="mt-1">
                 <span className="inline-flex text-xs px-2.5 py-1 rounded bg-orange-950/50 border border-orange-900/40 text-orange-400 font-medium">
-                  {STAGES.find(s => s.id === selectedLead.stage_id)?.name || "Sin definir"}
+                  {stages.find(s => s.id === selectedLead.stage_id)?.name || "Sin definir"}
                 </span>
               </div>
             </div>
@@ -2163,7 +2208,7 @@ export default function CRMWorkspace() {
                   onChange={(e) => setNewLeadForm({ ...newLeadForm, stageId: e.target.value })}
                   className="w-full bg-neutral-950/60 border border-neutral-800 text-neutral-200 text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-orange-600 transition-colors"
                 >
-                  {STAGES.map(s => (
+                  {stages.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
