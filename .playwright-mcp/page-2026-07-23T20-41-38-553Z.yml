@@ -1,0 +1,166 @@
+- generic [ref=f7e1]:
+  - generic [ref=f7e2]:
+    - navigation [ref=f7e19]:
+      - generic [ref=f7e20]:
+        - generic [ref=f7e21]: A
+        - generic [ref=f7e22]:
+          - button "Mensajes (Chats)" [ref=f7e23]
+          - button "Pipeline de Leads" [active] [ref=f7e26]
+          - button "Métricas Dashboard" [ref=f7e31]
+          - button "Marketing Studio" [ref=f7e34]
+          - button "Configuración" [ref=f7e38]
+      - generic [ref=f7e42]:
+        - generic "Conectado como Alejo" [ref=f7e43]: A
+        - button "Cerrar Sesión" [ref=f7e44]
+    - main [ref=f7e339]:
+      - generic [ref=f7e340]:
+        - generic [ref=f7e341]:
+          - generic [ref=f7e342]: Pipeline de Ventas
+          - generic [ref=f7e343]: 19 Leads Activos
+        - generic [ref=f7e344]:
+          - textbox "Filtrar por nombre..." [ref=f7e349]
+          - button "Mensaje masivo" [ref=f7e350]
+          - button "Añadir Lead" [ref=f7e354]
+      - generic [ref=f7e356]:
+        - generic [ref=f7e357]:
+          - generic [ref=f7e358]:
+            - generic [ref=f7e359]: Nuevo
+            - generic [ref=f7e360]: "19"
+          - generic [ref=f7e361]:
+            - generic [ref=f7e363]:
+              - heading "Automata" [level=4] [ref=f7e364]
+              - generic [ref=f7e365]: +54 9 11 5622-5632
+              - generic [ref=f7e366]:
+                - generic [ref=f7e367]: WhatsApp
+                - button "Chat" [ref=f7e368]
+            - generic [ref=f7e372]:
+              - heading "Mate" [level=4] [ref=f7e373]
+              - generic [ref=f7e374]: +54 9 11 2450-9998
+              - generic [ref=f7e375]:
+                - generic [ref=f7e376]: WhatsApp
+                - button "Chat" [ref=f7e377]
+            - generic [ref=f7e381]:
+              - heading "+35816051064840" [level=4] [ref=f7e382]
+              - generic [ref=f7e383]: Sin nombre
+              - generic [ref=f7e384]:
+                - generic [ref=f7e385]: WhatsApp
+                - button "Chat" [ref=f7e386]
+            - generic [ref=f7e390]:
+              - heading "WhatsApp Business" [level=4] [ref=f7e391]
+              - generic [ref=f7e392]: "+0"
+              - generic [ref=f7e393]:
+                - generic [ref=f7e394]: WhatsApp
+                - button "Chat" [ref=f7e395]
+            - generic [ref=f7e399]:
+              - heading "nicominali" [level=4] [ref=f7e400]
+              - generic [ref=f7e401]: "+256104638492746"
+              - generic [ref=f7e402]:
+                - generic [ref=f7e403]: WhatsApp
+                - button "Chat" [ref=f7e404]
+            - generic [ref=f7e408]:
+              - heading "+54 9 11 7827-0698" [level=4] [ref=f7e409]
+              - generic [ref=f7e410]: Sin nombre
+              - generic [ref=f7e411]:
+                - generic [ref=f7e412]: WhatsApp
+                - button "Chat" [ref=f7e413]
+            - generic [ref=f7e417]:
+              - heading "+182167548199159" [level=4] [ref=f7e418]
+              - generic [ref=f7e419]: Sin nombre
+              - generic [ref=f7e420]:
+                - generic [ref=f7e421]: WhatsApp
+                - button "Chat" [ref=f7e422]
+            - generic [ref=f7e426]:
+              - heading "+54 9 11 2865-9698" [level=4] [ref=f7e427]
+              - generic [ref=f7e428]: Sin nombre
+              - generic [ref=f7e429]:
+                - generic [ref=f7e430]: WhatsApp
+                - button "Chat" [ref=f7e431]
+            - generic [ref=f7e435]:
+              - heading "+54 9 11 2639-9493" [level=4] [ref=f7e436]
+              - generic [ref=f7e437]: Sin nombre
+              - generic [ref=f7e438]:
+                - generic [ref=f7e439]: WhatsApp
+                - button "Chat" [ref=f7e440]
+            - generic [ref=f7e444]:
+              - heading "+255026635210815" [level=4] [ref=f7e445]
+              - generic [ref=f7e446]: Sin nombre
+              - generic [ref=f7e447]:
+                - generic [ref=f7e448]: WhatsApp
+                - button "Chat" [ref=f7e449]
+            - generic [ref=f7e453]:
+              - heading "+54 9 11 3376-6767" [level=4] [ref=f7e454]
+              - generic [ref=f7e455]: Sin nombre
+              - generic [ref=f7e456]:
+                - generic [ref=f7e457]: WhatsApp
+                - button "Chat" [ref=f7e458]
+            - generic [ref=f7e462]:
+              - heading "+87252998864977" [level=4] [ref=f7e463]
+              - generic [ref=f7e464]: Sin nombre
+              - generic [ref=f7e465]:
+                - generic [ref=f7e466]: WhatsApp
+                - button "Chat" [ref=f7e467]
+            - generic [ref=f7e471]:
+              - heading "+27071329894562" [level=4] [ref=f7e472]
+              - generic [ref=f7e473]: Sin nombre
+              - generic [ref=f7e474]:
+                - generic [ref=f7e475]: WhatsApp
+                - button "Chat" [ref=f7e476]
+            - generic [ref=f7e480]:
+              - heading "+264303798161539" [level=4] [ref=f7e481]
+              - generic [ref=f7e482]: Sin nombre
+              - generic [ref=f7e483]:
+                - generic [ref=f7e484]: WhatsApp
+                - button "Chat" [ref=f7e485]
+            - generic [ref=f7e489]:
+              - heading "+265905888096369" [level=4] [ref=f7e490]
+              - generic [ref=f7e491]: Sin nombre
+              - generic [ref=f7e492]:
+                - generic [ref=f7e493]: WhatsApp
+                - button "Chat" [ref=f7e494]
+            - generic [ref=f7e498]:
+              - heading "+271949209071727" [level=4] [ref=f7e499]
+              - generic [ref=f7e500]: Sin nombre
+              - generic [ref=f7e501]:
+                - generic [ref=f7e502]: WhatsApp
+                - button "Chat" [ref=f7e503]
+            - generic [ref=f7e507]:
+              - heading "+141790493585547" [level=4] [ref=f7e508]
+              - generic [ref=f7e509]: Sin nombre
+              - generic [ref=f7e510]:
+                - generic [ref=f7e511]: WhatsApp
+                - button "Chat" [ref=f7e512]
+            - generic [ref=f7e516]:
+              - heading "alejogautier" [level=4] [ref=f7e517]
+              - generic [ref=f7e518]: "+187041681776857"
+              - generic [ref=f7e519]:
+                - generic [ref=f7e520]: WhatsApp
+                - button "Chat" [ref=f7e521]
+            - generic [ref=f7e525]:
+              - heading "+54 9 11 6283-8106" [level=4] [ref=f7e526]
+              - generic [ref=f7e527]: Sin nombre
+              - generic [ref=f7e528]:
+                - generic [ref=f7e529]: WhatsApp
+                - button "Chat" [ref=f7e530]
+        - generic [ref=f7e533]:
+          - generic [ref=f7e534]:
+            - generic [ref=f7e535]: Contactado
+            - generic [ref=f7e536]: "0"
+          - generic [ref=f7e537]: Arrastra leads aquí
+        - generic [ref=f7e539]:
+          - generic [ref=f7e540]:
+            - generic [ref=f7e541]: En Negociación
+            - generic [ref=f7e542]: "0"
+          - generic [ref=f7e543]: Arrastra leads aquí
+        - generic [ref=f7e545]:
+          - generic [ref=f7e546]:
+            - generic [ref=f7e547]: Ganado
+            - generic [ref=f7e548]: "0"
+          - generic [ref=f7e549]: Arrastra leads aquí
+        - generic [ref=f7e551]:
+          - generic [ref=f7e552]:
+            - generic [ref=f7e553]: Perdido
+            - generic [ref=f7e554]: "0"
+          - generic [ref=f7e555]: Arrastra leads aquí
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=f7e14] [cursor=pointer]
+  - alert [ref=f7e18]

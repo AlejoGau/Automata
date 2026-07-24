@@ -1,0 +1,167 @@
+[    1260ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    1357ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    1799ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    1800ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/:0
+[    1950ms] [LOG] [Fast Refresh] done in 443ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[    4233ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/health:0
+[    4235ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yeyu410a:0
+[    7373ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yf1hpwu0:0
+[   12487ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yf5f6ir5:0
+[   18727ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yfa8cf63:0
+[   26082ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yffxa4b4:0
+[   33451ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yfllfnd3:0
+[   38750ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://placeholder.supabase.co/auth/v1/token?grant_type=password:0
+[   38751ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:621:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:1010:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:997:24)
+    at SupabaseAuthClient.signInWithPassword (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:4534:219)
+    at handleLogin (http://localhost:3000/_next/static/chunks/src_0e7ehgo._.js:7564:182)
+    at executeDispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10329:13)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at processDispatchQueue (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10355:41)
+    at http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10633:13
+    at batchedUpdates$1 (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:2253:44)
+    at dispatchEventForPluginEventSystem (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10431:9)
+    at dispatchEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:13002:37)
+    at dispatchDiscreteEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:12984:64) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   39036ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   39123ms] [LOG] [Fast Refresh] done in 194ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[   40809ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yfra1twn:0
+[   43197ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://placeholder.supabase.co/auth/v1/token?grant_type=password:0
+[   43197ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:621:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:1010:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:997:24)
+    at SupabaseAuthClient.signInWithPassword (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:4534:219)
+    at handleLogin (http://localhost:3000/_next/static/chunks/src_0e7ehgo._.js:7564:182)
+    at executeDispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10329:13)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at processDispatchQueue (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10355:41)
+    at http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10633:13
+    at batchedUpdates$1 (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:2253:44)
+    at dispatchEventForPluginEventSystem (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10431:9)
+    at dispatchEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:13002:37)
+    at dispatchDiscreteEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:12984:64) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   47692ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://placeholder.supabase.co/auth/v1/token?grant_type=password:0
+[   47692ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:621:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:1010:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:997:24)
+    at SupabaseAuthClient.signInWithPassword (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:4534:219)
+    at handleLogin (http://localhost:3000/_next/static/chunks/src_0e7ehgo._.js:7564:182)
+    at executeDispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10329:13)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at processDispatchQueue (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10355:41)
+    at http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10633:13
+    at batchedUpdates$1 (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:2253:44)
+    at dispatchEventForPluginEventSystem (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10431:9)
+    at dispatchEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:13002:37)
+    at dispatchDiscreteEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:12984:64) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   48180ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yfwyckj0:0
+[   53116ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://placeholder.supabase.co/auth/v1/token?grant_type=password:0
+[   53116ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:621:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:1010:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:997:24)
+    at SupabaseAuthClient.signInWithPassword (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:4534:219)
+    at handleLogin (http://localhost:3000/_next/static/chunks/src_0e7ehgo._.js:7564:182)
+    at executeDispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10329:13)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at processDispatchQueue (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10355:41)
+    at http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10633:13
+    at batchedUpdates$1 (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:2253:44)
+    at dispatchEventForPluginEventSystem (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10431:9)
+    at dispatchEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:13002:37)
+    at dispatchDiscreteEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:12984:64) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   55543ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yg2n6ddr:0
+[   56505ms] [ERROR] Failed to load resource: net::ERR_NAME_NOT_RESOLVED @ https://placeholder.supabase.co/auth/v1/token?grant_type=password:0
+[   56505ms] [ERROR] TypeError: Failed to fetch
+    at http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:621:23
+    at _handleRequest (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:1010:24)
+    at _request (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:997:24)
+    at SupabaseAuthClient.signInWithPassword (http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_1vqrmkg._.js:4534:219)
+    at handleLogin (http://localhost:3000/_next/static/chunks/src_0e7ehgo._.js:7564:182)
+    at executeDispatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10329:13)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at processDispatchQueue (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10355:41)
+    at http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10633:13
+    at batchedUpdates$1 (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:2253:44)
+    at dispatchEventForPluginEventSystem (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10431:9)
+    at dispatchEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:13002:37)
+    at dispatchDiscreteEvent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:12984:64) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[   62902ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yg8bzy71:0
+[   70257ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yge01dhy:0
+[   77637ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ygjooriw:0
+[   85018ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ygpdrzk1:0
+[   92392ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ygv2ka2k:0
+[   99751ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yh0rj2a6:0
+[  107127ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yh6g0o56:0
+[  114478ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yhc4nam1:0
+[  116542ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  116799ms] [WARNING] GoTrueClient@automata-crm-auth:1 (2.108.2) 2026-07-23T20:20:37.473Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key. @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  116851ms] [LOG] [Fast Refresh] done in 253ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  121829ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yhhsubgw:0
+[  129163ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yhnh0gxx:0
+[  136533ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yht4yovk:0
+[  143908ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yhytrtlo:0
+[  151268ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yi4ig2xl:0
+[  158633ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yia6nrtu:0
+[  166001ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yifvboks:0
+[  173361ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yilkaqi5:0
+[  180727ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yir8q5td:0
+[  188093ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yiwx9pbj:0
+[  195449ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yj2luv9w:0
+[  202795ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yj89xdyl:0
+[  210153ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yjdy2tgn:0
+[  217535ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yjjmp7fz:0
+[  224893ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yjpbg12b:0
+[  232263ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yjv071dd:0
+[  239601ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yk0okiw9:0
+[  246967ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yk6copgg:0
+[  254326ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ykc13lvh:0
+[  261693ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ykhpq8bz:0
+[  269068ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ykned20i:0
+[  276435ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ykt2xv9d:0
+[  283790ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ykyrnn9d:0
+[  291166ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yl4g6yk7:0
+[  298534ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yla52q1o:0
+[  305904ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ylfthubn:0
+[  313284ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yllih5fp:0
+[  320646ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ylr782m8:0
+[  328011ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ylwvzmph:0
+[  335388ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ym2kh25t:0
+[  342736ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ym897spc:0
+[  350101ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ymdxk3q3:0
+[  357471ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ymjm7sca:0
+[  364830ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ympaidfg:0
+[  372163ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ymuz4pr6:0
+[  379536ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yn0n1bb2:0
+[  386908ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yn6br8a5:0
+[  394264ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ync07hs2:0
+[  401624ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ynhos6fr:0
+[  409001ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ynndde7k:0
+[  416370ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ynt23znq:0
+[  423746ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ynyqs0ep:0
+[  431110ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yo4ftpji:0
+[  438479ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yoa43ig6:0
+[  445851ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yofsth3g:0
+[  453223ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yolhigas:0
+[  460607ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yor6pzwo:0
+[  467984ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yowvp6u1:0
+[  475347ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yp2ke4kp:0
+[  482716ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yp893w5u:0
+[  490093ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ypdxwerc:0
+[  497458ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ypjmmmiz:0
+[  504834ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yppbf3h7:0
+[  512203ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=ypv07drk:0
+[  519564ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yq0os7i0:0
+[  526920ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yq6d9mrx:0
+[  534300ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yqc1vqbq:0
+[  541672ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yqhqiy6r:0
+[  549028ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yqnfha9g:0
+[  556402ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yqt3vglk:0
+[  563776ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yqysoust:0
+[  571121ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yr4hcccj:0
+[  578490ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yra5htxs:0
+[  585862ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/socket.io/?EIO=4&transport=polling&t=yrfu2jv5:0
